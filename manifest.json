@@ -1,0 +1,20 @@
+{
+  "name": "HabitFlow — Kişisel Alışkanlık & Seri Takibi",
+  "short_name": "HabitFlow",
+  "description": "Modern, hızlı ve çevrimdışı çalışabilen kişisel alışkanlık, seri ve günlük not takip uygulaması.",
+  "lang": "tr-TR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f6fb",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
