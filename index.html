@@ -8,15 +8,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Olimpya" />
-  <link rel="manifest" href="manifest.json" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="manifest" href="manifest.json?v=3" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="apple-touch-icon" href="icon.svg" />
   <title>Olimpya — Kişisel Alışkanlık & Planlama</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <div class="app-container">
-    <!-- Üst Başlık Çubuğu (Header): Sol Tarih/Logo, Sağ Minimalist Ayarlar İkonu -->
+    <!-- Üst Başlık Çubuğu (Header): Sol Tarih/Logo, Sağ Hızlı Yenile ve Ayarlar İkonu -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">
@@ -31,6 +34,14 @@
       </div>
 
       <div class="header-actions">
+        <button type="button" id="quick-refresh-btn" class="icon-header-btn refresh-header-btn" title="Uygulamayı Yenile (Veriler Korunur)" aria-label="Uygulamayı Yenile">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+
         <button type="button" id="open-settings-btn" class="icon-header-btn" title="Ayarlar" aria-label="Ayarları Aç" aria-haspopup="dialog">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -728,6 +739,6 @@
     </div>
   </nav>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'olimpya-pwa-cache-v3';
+const CACHE_NAME = 'olimpya-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,58 +8,76 @@ const ASSETS_TO_CACHE = [
   './icon.svg'
 ];
 
-// Kurulum (Install): Temel uygulama dosyalarını önbelleğe al
+// Kurulum (Install): Beklemeden yeni sürüme geç ve dosyaları iOS HTTP önbelleğini atlayarak kaydet
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      const freshRequests = ASSETS_TO_CACHE.map(
+        (url) => new Request(url, { cache: 'no-store' })
+      );
+      return cache.addAll(freshRequests);
+    })
+  );
 });
 
-// Etkinleştirme (Activate): Eski önbellekleri temizle
+// Etkinleştirme (Activate): Eski tüm önbellekleri temizle ve açık istemcileri hemen devral
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keyList) =>
-      Promise.all(
-        keyList.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-          return null;
-        })
+    caches
+      .keys()
+      .then((keyList) =>
+        Promise.all(
+          keyList.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+            return null;
+          })
+        )
       )
-    )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// İstek Yakalama (Fetch): Dış API isteklerini (dummyjson vb.) önbelleğe takılmadan doğrudan ağdan geçir
+// İstemciden gelen manuel güncelleme mesajlarını dinle
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// İstek Yakalama (Fetch): iOS WebKit gizli HTTP önbelleğini atlayan Network-First (cache: "no-store")
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const requestUrl = new URL(event.request.url);
 
-  // Harici origin (örn. https://dummyjson.com/quotes/random) ise doğrudan ağdan çek
+  // Dış API isteklerini (örn. dummyjson.com) önbelleğe hiç sokmadan doğrudan ağdan geçir
   if (requestUrl.origin !== self.location.origin) {
-    event.respondWith(fetch(event.request));
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
 
-  // Yerel uygulama dosyaları için Network-First, çevrimdışıysa Cache fallback
+  // Kendi uygulama dosyalarımız (index.html, style.css, script.js, manifest.json, icon.svg)
+  // için her zaman sunucudan en taze dosyayı çek (cache: "no-store"), yalnızca internet yoksa önbellekten dön
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-store' })
       .then((networkResponse) => {
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
         return networkResponse;
       })
       .catch(() =>
-        caches.match(event.request).then((cachedResponse) => {
+        caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
+            return caches.match('./index.html', { ignoreSearch: true });
           }
           return new Response('Çevrimdışı', {
             status: 503,

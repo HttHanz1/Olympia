@@ -65,6 +65,7 @@
   // DOM Elemanları — Üst Başlık ve Ayarlar Modalı
   const currentDateEl = document.getElementById('current-date');
   const metaThemeColorEl = document.getElementById('meta-theme-color');
+  const quickRefreshBtn = document.getElementById('quick-refresh-btn');
   const openSettingsBtn = document.getElementById('open-settings-btn');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
   const settingsModalBackdrop = document.getElementById('settings-modal-backdrop');
@@ -1898,15 +1899,122 @@
   }
 
   // ==========================================================================
-  // PWA SERVICE WORKER KAYDI
+  // PWA SERVICE WORKER KAYDI, OTOMATİK YENİLEME VE HIZLI ÖNBELLEK TEMİZLEME
   // ==========================================================================
+  let swRegistration = null;
+  let isRefreshingForSw = false;
+
+  function checkForServiceWorkerUpdate() {
+    if (swRegistration && typeof swRegistration.update === 'function') {
+      swRegistration.update().catch(() => {});
+    } else if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) {
+          swRegistration = reg;
+          reg.update().catch(() => {});
+        }
+      });
+    }
+  }
+
   function registerServiceWorker() {
-    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
+    if (
+      !('serviceWorker' in navigator) ||
+      !(location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ) {
+      return;
+    }
+
+    const hadControllerOnLoad = Boolean(navigator.serviceWorker.controller);
+
+    // Yeni bir Service Worker sürümü devreye girdiği an (sonsuz döngüye girmeden) sayfayı otomatik yenile
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadControllerOnLoad || isRefreshingForSw) return;
+      isRefreshingForSw = true;
+      window.location.reload();
+    });
+
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('./sw.js?v=3', { updateViaCache: 'none' })
+        .then((reg) => {
+          swRegistration = reg;
+          reg.update().catch(() => {});
+
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        })
+        .catch((err) => {
           console.warn('Service Worker kaydı atlandı:', err);
         });
-      });
+    });
+
+    // iOS Safari PWA arka plandan ön plana geldiğinde güncellemeleri sessizce denetle
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkForServiceWorkerUpdate();
+      }
+    });
+
+    window.addEventListener('pageshow', () => {
+      checkForServiceWorkerUpdate();
+    });
+  }
+
+  // Kullanıcı verilerine (localStorage) dokunmadan yalnızca SW önbelleklerini temizleyip sayfayı sunucudan taze yükler
+  async function forceRefreshAppCacheAndReload() {
+    if (quickRefreshBtn) {
+      quickRefreshBtn.classList.add('is-spinning');
+      quickRefreshBtn.disabled = true;
+    }
+    if (forceUpdateAppBtn) {
+      forceUpdateAppBtn.disabled = true;
+    }
+    if (forceUpdateBtnLabelEl) {
+      forceUpdateBtnLabelEl.textContent = 'Önbellek temizleniyor ve güncelleniyor...';
+    }
+
+    try {
+      // 1. Tüm Cache Storage önbelleklerini sil (localStorage verilerine kesinlikle dokunmaz)
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }
+
+      // 2. Service Worker kaydını kaldır / güncelle ki sunucudan en taze sw.js ve dosyalar çekilsin
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(
+          registrations.map(async (reg) => {
+            try {
+              await reg.unregister();
+            } catch (e) {
+              try {
+                await reg.update();
+              } catch (_) {}
+            }
+          })
+        );
+      }
+
+      showBackupFeedback('✓ Önbellek yenilendi, uygulama yeniden yükleniyor...', false);
+    } catch (err) {
+      console.error('Önbellek yenileme hatası:', err);
+    } finally {
+      setTimeout(() => {
+        window.location.reload();
+      }, 250);
     }
   }
 
@@ -1919,7 +2027,10 @@
     });
   });
 
-  // Ayarlar Modalı Dinleyicileri
+  // Ayarlar Modalı ve Üst Çubuk Hızlı Yenile Dinleyicileri
+  if (quickRefreshBtn) {
+    quickRefreshBtn.addEventListener('click', forceRefreshAppCacheAndReload);
+  }
   openSettingsBtn.addEventListener('click', openSettingsModal);
   closeSettingsBtn.addEventListener('click', closeSettingsModal);
 

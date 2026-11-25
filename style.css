@@ -1672,6 +1672,19 @@ textarea#journal-textarea:focus {
   transform: rotate(25deg);
 }
 
+.refresh-header-btn.is-spinning svg {
+  animation: spinRefresh 0.65s linear infinite;
+}
+
+@keyframes spinRefresh {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Bugünün Özel Görevleri (7 Gün Sekmesi Üstünde) */
 .today-tasks-section {
   display: flex;
