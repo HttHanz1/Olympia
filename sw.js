@@ -1,4 +1,4 @@
-const CACHE_NAME = 'olimpya-v3';
+const CACHE_NAME = 'olimpya-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

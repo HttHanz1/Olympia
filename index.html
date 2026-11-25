@@ -11,20 +11,27 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="manifest" href="manifest.json?v=3" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="manifest" href="manifest.json?v=4" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=4" />
+  <link rel="apple-touch-icon" href="icon.svg?v=4" />
   <title>Olimpya — Kişisel Alışkanlık & Planlama</title>
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <div class="app-container">
-    <!-- Üst Başlık Çubuğu (Header): Sol Tarih/Logo, Sağ Hızlı Yenile ve Ayarlar İkonu -->
+    <!-- Üst Başlık Çubuğu (Header): Sol Olimpiyat Halkaları & Başlık, Sağ Hızlı Yenile ve Ayarlar İkonu -->
     <header class="app-header">
       <div class="brand">
-        <div class="brand-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        <div class="brand-icon olympic-rings-badge" aria-hidden="true">
+          <svg class="olympic-rings-svg" viewBox="0 0 156 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Alt Sıra: Sarı (#FCB131) ve Yeşil (#00A651) -->
+            <circle cx="53" cy="50" r="20" stroke="#FCB131" stroke-width="5.2" />
+            <circle cx="103" cy="50" r="20" stroke="#00A651" stroke-width="5.2" />
+            <!-- Üst Sıra: Mavi (#0081C8), Siyah (#000000 + Koyu Tema Konturu), Kırmızı (#EE334E) -->
+            <circle cx="28" cy="26" r="20" stroke="#0081C8" stroke-width="5.2" />
+            <circle class="olympic-black-halo" cx="78" cy="26" r="20" stroke="transparent" stroke-width="7.4" />
+            <circle class="olympic-black-ring" cx="78" cy="26" r="20" stroke="#000000" stroke-width="5.2" />
+            <circle cx="128" cy="26" r="20" stroke="#EE334E" stroke-width="5.2" />
           </svg>
         </div>
         <div>
@@ -739,6 +746,6 @@
     </div>
   </nav>
 
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

@@ -54,7 +54,7 @@
 
   const THEME_META_COLORS = {
     light: '#4f46e5',
-    dark: '#0b0f19',
+    dark: '#070709',
     pastel: '#d97757'
   };
 

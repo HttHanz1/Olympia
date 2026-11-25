@@ -7,6 +7,7 @@
   --bg-gradient-1: rgba(99, 102, 241, 0.08);
   --bg-gradient-2: rgba(16, 185, 129, 0.06);
   --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
   --bg-card-completed: #f8fafc;
   --bg-input: #f8fafc;
   --bg-pill-bar: #e2e8f0;
@@ -15,6 +16,7 @@
   --text-main: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
+  --btn-primary-text: #ffffff;
 
   --border-color: #e2e8f0;
   --border-hover: #cbd5e1;
@@ -43,45 +45,48 @@
   --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
 }
 
+/* Deep Obsidian / OLED Koyu Tema Paleti + Olimpiyat Altını (#FCB131) Vurgu */
 [data-theme="dark"] {
-  --bg-page: #0b0f19;
-  --bg-gradient-1: rgba(99, 102, 241, 0.14);
-  --bg-gradient-2: rgba(16, 185, 129, 0.1);
-  --bg-card: #151c2c;
-  --bg-card-completed: #111726;
-  --bg-input: #0f1523;
-  --bg-pill-bar: #1e293b;
-  --bg-hover: #1e293b;
+  --bg-page: #070709;
+  --bg-gradient-1: rgba(252, 177, 49, 0.07);
+  --bg-gradient-2: rgba(0, 129, 200, 0.06);
+  --bg-card: #111115;
+  --bg-elevated: #15151A;
+  --bg-card-completed: #0c0c10;
+  --bg-input: #0b0b0e;
+  --bg-pill-bar: #15151A;
+  --bg-hover: #1a1a22;
 
-  --text-main: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-main: #F4F4F6;
+  --text-secondary: #a1a1b0;
+  --text-muted: #686878;
+  --btn-primary-text: #070709;
 
-  --border-color: #232f46;
-  --border-hover: #334155;
-  --border-focus: #818cf8;
+  --border-color: #22222A;
+  --border-hover: #32323e;
+  --border-focus: #FCB131;
 
-  --primary: #6366f1;
-  --primary-hover: #818cf8;
-  --primary-soft: rgba(99, 102, 241, 0.16);
-  --primary-glow: rgba(99, 102, 241, 0.35);
+  --primary: #FCB131;
+  --primary-hover: #ffc254;
+  --primary-soft: rgba(252, 177, 49, 0.14);
+  --primary-glow: rgba(252, 177, 49, 0.28);
 
-  --success: #10b981;
-  --success-soft: rgba(16, 185, 129, 0.16);
+  --success: #00A651;
+  --success-soft: rgba(0, 166, 81, 0.16);
 
-  --streak: #fb923c;
-  --streak-soft: rgba(249, 115, 22, 0.16);
-  --streak-border: rgba(251, 146, 60, 0.32);
+  --streak: #FCB131;
+  --streak-soft: rgba(252, 177, 49, 0.15);
+  --streak-border: rgba(252, 177, 49, 0.32);
 
-  --danger: #f87171;
-  --danger-soft: rgba(248, 113, 113, 0.15);
+  --danger: #EE334E;
+  --danger-soft: rgba(238, 51, 78, 0.16);
 
-  --track-bg: #1e293b;
-  --checkbox-bg: #0f1523;
-  --checkbox-border: #475569;
+  --track-bg: #1b1b22;
+  --checkbox-bg: #0b0b0e;
+  --checkbox-border: #383846;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 12px 28px -6px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 14px 32px -6px rgba(0, 0, 0, 0.75);
 }
 
 [data-theme="pastel"] {
@@ -89,6 +94,7 @@
   --bg-gradient-1: rgba(244, 114, 182, 0.12);
   --bg-gradient-2: rgba(167, 139, 250, 0.12);
   --bg-card: #fffdf9;
+  --bg-elevated: #fffdf9;
   --bg-card-completed: #f7f3eb;
   --bg-input: #f9f5ee;
   --bg-pill-bar: #efe9de;
@@ -97,6 +103,7 @@
   --text-main: #3d342b;
   --text-secondary: #75685a;
   --text-muted: #a6998a;
+  --btn-primary-text: #ffffff;
 
   --border-color: #ebe3d5;
   --border-hover: #dcd1be;
@@ -213,13 +220,19 @@ body {
   gap: 1.15rem;
 }
 
-/* Header & Tema Seçici */
+/* Header & Orijinal Renkli Olimpiyat Halkaları Rozeti */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .brand {
@@ -228,23 +241,31 @@ body {
   gap: 0.85rem;
 }
 
-.brand-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-  color: #ffffff;
+.brand-icon.olympic-rings-badge {
+  width: 68px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px -4px var(--primary-glow);
+  box-shadow: var(--shadow-sm);
   flex-shrink: 0;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  padding: 4px 6px;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.brand-icon svg {
-  width: 24px;
-  height: 24px;
+.olympic-rings-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Koyu temada ortadaki siyah halkanın (#000000) kaybolmaması için 1px yarı saydam açık gri/beyaz dış kontur ve hafif parlama */
+[data-theme="dark"] .olympic-black-halo {
+  stroke: rgba(244, 244, 246, 0.62);
+  filter: drop-shadow(0 0 2.5px rgba(244, 244, 246, 0.35));
 }
 
 .app-header h1 {
@@ -582,15 +603,15 @@ select {
   gap: 0.4rem;
   padding: 0 1.2rem;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   font-family: inherit;
-  color: #ffffff;
+  color: var(--btn-primary-text);
   background-color: var(--primary);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color var(--transition), transform 0.15s ease, box-shadow var(--transition);
+  transition: background-color var(--transition), color var(--transition), transform 0.15s ease, box-shadow var(--transition);
 }
 
 .primary-btn:hover {
@@ -668,12 +689,12 @@ select {
 .filter-pill.active {
   background-color: var(--primary);
   border-color: var(--primary);
-  color: #ffffff;
+  color: var(--btn-primary-text);
   box-shadow: 0 4px 10px -2px var(--primary-glow);
 }
 
 .filter-pill.active .cat-dot {
-  background-color: #ffffff !important;
+  background-color: var(--btn-primary-text) !important;
 }
 
 .pill-count {
@@ -686,8 +707,8 @@ select {
 }
 
 .filter-pill.active .pill-count {
-  background-color: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.16);
+  color: var(--btn-primary-text);
 }
 
 .toolbar-right {
@@ -1241,7 +1262,7 @@ select {
 
 .save-edit-btn {
   background-color: var(--primary);
-  color: #ffffff;
+  color: var(--btn-primary-text);
 }
 
 .save-edit-btn:hover {
@@ -1485,7 +1506,7 @@ select {
 .journal-day-pill.active {
   background-color: var(--primary);
   border-color: var(--primary);
-  color: #ffffff;
+  color: var(--btn-primary-text);
 }
 
 .journal-day-pill .note-indicator {
@@ -1497,7 +1518,7 @@ select {
 }
 
 .journal-day-pill.active .note-indicator {
-  background-color: #ffffff;
+  background-color: var(--btn-primary-text);
 }
 
 .journal-editor {
@@ -1759,7 +1780,7 @@ textarea#journal-textarea:focus {
   grid-template-columns: repeat(5, 1fr);
   gap: 0.2rem;
   padding: 0.32rem;
-  background-color: var(--bg-card);
+  background-color: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: 18px;
   box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.08), 0 10px 28px -4px rgba(15, 23, 42, 0.14);
@@ -2527,6 +2548,7 @@ textarea#journal-textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background-color: var(--bg-elevated);
 }
 
 .modal-header {
@@ -2637,7 +2659,7 @@ textarea#journal-textarea:focus {
 }
 
 .preview-dark {
-  background: linear-gradient(135deg, #0b0f19 50%, #6366f1 50%);
+  background: linear-gradient(135deg, #070709 50%, #FCB131 50%);
 }
 
 .preview-pastel {

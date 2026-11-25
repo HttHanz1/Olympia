@@ -1,26 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4f46e5" />
-      <stop offset="100%" stop-color="#6366f1" />
-    </linearGradient>
-    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399" />
-      <stop offset="100%" stop-color="#10b981" />
-    </linearGradient>
+    <radialGradient id="obsidianBg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#15151A" />
+      <stop offset="100%" stop-color="#070709" />
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="116" fill="url(#bgGrad)" />
-  <g fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" opacity="0.28">
-    <line x1="256" y1="64" x2="256" y2="112" />
-    <line x1="256" y1="400" x2="256" y2="448" />
-    <line x1="64" y1="256" x2="112" y2="256" />
-    <line x1="400" y1="256" x2="448" y2="256" />
-    <line x1="120" y1="120" x2="154" y2="154" />
-    <line x1="358" y1="358" x2="392" y2="392" />
-    <line x1="392" y1="120" x2="358" y2="154" />
-    <line x1="154" y1="358" x2="120" y2="392" />
+  <!-- Derin Siyah (Deep Obsidian) Zemin -->
+  <rect width="512" height="512" rx="116" fill="url(#obsidianBg)" />
+  <rect x="8" y="8" width="496" height="496" rx="108" fill="none" stroke="#22222A" stroke-width="4" />
+
+  <!-- 5 Renkli Olimpiyat Halkası -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Alt Sıra: Sarı (#FCB131) ve Yeşil (#00A651) -->
+    <circle cx="191" cy="296" r="58" stroke="#FCB131" stroke-width="15" />
+    <circle cx="321" cy="296" r="58" stroke="#00A651" stroke-width="15" />
+
+    <!-- Üst Sıra: Mavi (#0081C8), Siyah (#000000 + Gümüş Dış Kontur), Kırmızı (#EE334E) -->
+    <circle cx="126" cy="222" r="58" stroke="#0081C8" stroke-width="15" />
+
+    <!-- Ortadaki Siyah Halka için Koyu Zeminde Görünürlük Konturu (1.5px Yarı Saydam Beyaz Halo) -->
+    <circle cx="256" cy="222" r="58" stroke="rgba(244, 244, 246, 0.55)" stroke-width="18.5" />
+    <circle cx="256" cy="222" r="58" stroke="#000000" stroke-width="15" />
+
+    <circle cx="386" cy="222" r="58" stroke="#EE334E" stroke-width="15" />
   </g>
-  <circle cx="256" cy="256" r="132" fill="#ffffff" opacity="0.14" />
-  <path d="M178 262l54 54 106-114" fill="none" stroke="url(#checkGrad)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M178 262l54 54 106-114" fill="none" stroke="#ffffff" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" />
 </svg>
