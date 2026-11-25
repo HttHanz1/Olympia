@@ -1,4 +1,4 @@
-const CACHE_NAME = 'habitflow-pwa-cache-v1';
+const CACHE_NAME = 'olimpya-pwa-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -33,10 +33,19 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// İstek Yakalama (Fetch): Önce ağdan güncel dosyayı dene, çevrimdışıysa önbellekten sun
+// İstek Yakalama (Fetch): Dış API isteklerini (dummyjson vb.) önbelleğe takılmadan doğrudan ağdan geçir
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  const requestUrl = new URL(event.request.url);
+
+  // Harici origin (örn. https://dummyjson.com/quotes/random) ise doğrudan ağdan çek
+  if (requestUrl.origin !== self.location.origin) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Yerel uygulama dosyaları için Network-First, çevrimdışıysa Cache fallback
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {

@@ -3,7 +3,40 @@
   const NOTES_KEY = 'habitflow_notes_v1';
   const THEME_KEY = 'habitflow_theme_v1';
   const VIEW_MODE_KEY = 'habitflow_view_v1';
-  const JOURNAL_OPEN_KEY = 'habitflow_journal_open_v1';
+  const ACTIVE_TAB_KEY = 'olimpya_active_tab_v1';
+  const QUOTE_CACHE_KEY = 'olimpya_daily_quote_v1';
+
+  // Çevrimdışı (Offline) Koruma İçin Gömülü 28 Adet Türkçe Disiplin, Alışkanlık ve Motivasyon Sözü
+  const FALLBACK_TURKISH_QUOTES = [
+    { quote: 'Biz tekrar tekrar ne yapıyorsak oyuz. Mükemmellik bir eylem değil, bir alışkanlıktır.', author: 'Aristoteles' },
+    { quote: 'Disiplin, şu an istediğin şey ile en çok istediğin şey arasında seçim yapabilmektir.', author: 'Abraham Lincoln' },
+    { quote: 'Başarı, her gün tekrarlanan küçük çabaların toplamıdır.', author: 'Robert Collier' },
+    { quote: 'Motivasyon başlamanı sağlar; alışkanlık ise devam etmeni.', author: 'Jim Ryun' },
+    { quote: 'Geleceğiniz, bugün ne yaptığınızla şekillenir; yarın ne yapacağınızla değil.', author: 'Robert Kiyosaki' },
+    { quote: 'Küçük alışkanlıklar zamanla bileşik faiz gibi büyür; her gün %1 daha iyi olmak yıl sonunda seni bambaşka bir yere taşır.', author: 'James Clear' },
+    { quote: 'Zafer, zafer benimdir diyebilenindir. Başarı ise “başaracağım” diye başlayarak sonunda “başardım” diyebilenindir.', author: 'Mustafa Kemal Atatürk' },
+    { quote: 'Üstünlük, büyük bir eylemde değil, her gün gösterilen sadık istikrardadır.', author: 'Seneca' },
+    { quote: 'Önce biz alışkanlıklarımızı oluştururuz, sonra alışkanlıklarımız bizi oluşturur.', author: 'John Dryden' },
+    { quote: 'Zor olduğu için cesaret edemiyor değiliz; cesaret edemediğimiz için zordur.', author: 'Seneca' },
+    { quote: 'Bir şeyi gerçekten yapmak isteyen bir yol bulur; istemeyen ise bir bahane.', author: 'E. C. McKenzie' },
+    { quote: 'Sıradan işleri sıradışı bir istikrarla yapmak, kalıcı başarının en sade sırrıdır.', author: 'Olimpya İlkesi' },
+    { quote: 'Yarın bambaşka bir insan olacağım diyorsun. Niye bugünden başlamıyorsun?', author: 'Epiktetos' },
+    { quote: 'İrade kas gibidir; her gün küçük bir hedefi tamamladıkça daha da güçlenir.', author: 'William James' },
+    { quote: 'Büyük işler, küçük adımların bir araya gelmesiyle başarılır.', author: 'Vincent van Gogh' },
+    { quote: 'Kendine hakim olamayan hiçbir insan özgür değildir.', author: 'Epiktetos' },
+    { quote: 'Yavaş ilerlemekten korkma; sadece yerinde saymaktan kork.', author: 'Doğu Atasözü' },
+    { quote: 'Odaklanma, binlerce iyi fikre hayır diyebilme sanatıdır.', author: 'Steve Jobs' },
+    { quote: 'Zinciri kırma: Her gün attığın tek bir çarpı işareti, dünkü emeğini bugüne bağlar.', author: 'Olimpya İlkesi' },
+    { quote: 'En uzun yolculuklar bile tek bir adımla başlar.', author: 'Lao Tzu' },
+    { quote: 'Düşüncelerine dikkat et, davranışların olur. Davranışlarına dikkat et, alışkanlıkların olur.', author: 'Mahatma Gandhi' },
+    { quote: 'Yetenek seni zirveye taşıyabilir ama seni orada tutacak olan karakter ve disiplindir.', author: 'John Wooden' },
+    { quote: 'Bugünün işini yarına bırakma; çünkü yarın da kendi yüküyle gelir.', author: 'Benjamin Franklin' },
+    { quote: 'Sabır ve azim, en sert kayayı bile delen su damlası gibidir.', author: 'Lucretius' },
+    { quote: 'Hedeflerine ulaşamazsın, sistemlerinin ve alışkanlıklarının seviyesine düşersin.', author: 'James Clear' },
+    { quote: 'İnsan, zihninde kurduğu sınırlar kadar küçük, kurduğu disiplin kadar büyüktür.', author: 'Marcus Aurelius' },
+    { quote: 'Mükemmel zamanı bekleme; şu anı al ve onu mükemmel yap.', author: 'Sri Chinmoy' },
+    { quote: 'Dinlenmeyi öğren, vazgeçmeyi değil. Küçük bir adım bile hiç adım atmamaktan üstündür.', author: 'Banksy' }
+  ];
 
   // Varsayılan Kategori Renk Eşleşmeleri
   const PRESET_CATEGORY_COLORS = {
@@ -27,14 +60,23 @@
   const COLOR_PALETTE = ['emerald', 'indigo', 'amber', 'purple', 'rose', 'cyan'];
   const DAY_SHORT_NAMES = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
-  // DOM Elemanları
+  // DOM Elemanları — Genel & Üst Bilgi
   const currentDateEl = document.getElementById('current-date');
   const metaThemeColorEl = document.getElementById('meta-theme-color');
   const resetDayBtn = document.getElementById('reset-day-btn');
   const themeButtons = document.querySelectorAll('.theme-btn');
   const viewButtons = document.querySelectorAll('.view-btn');
 
-  // Üst İstatistik Kartları ve İlerleme Çubuğu
+  // Alt Navigasyon (Bottom Tab Bar) Elemanları
+  const bottomNavButtons = document.querySelectorAll('.bottom-nav-item');
+  const tabPanels = {
+    '7days': document.getElementById('tab-panel-7days'),
+    '30days': document.getElementById('tab-panel-30days'),
+    'notes': document.getElementById('tab-panel-notes'),
+    'quote': document.getElementById('tab-panel-quote')
+  };
+
+  // Sekme 1 ("7 Gün") Elemanları
   const progressPercentEl = document.getElementById('progress-percent');
   const progressCountEl = document.getElementById('progress-count');
   const topStreakValueEl = document.getElementById('top-streak-value');
@@ -46,7 +88,6 @@
   const progressBarContainer = document.getElementById('progress-bar-container');
   const progressMessageEl = document.getElementById('progress-message');
 
-  // Form Elemanları
   const habitForm = document.getElementById('habit-form');
   const habitTitleInput = document.getElementById('habit-title');
   const habitCategorySelect = document.getElementById('habit-category-select');
@@ -54,7 +95,6 @@
   const habitCategoryCustomInput = document.getElementById('habit-category-custom');
   const quickCategoryPills = document.querySelectorAll('.quick-cat-pill');
 
-  // Liste ve Filtre Elemanları
   const categoryFilterPillsEl = document.getElementById('category-filter-pills');
   const visibleHabitCountEl = document.getElementById('visible-habit-count');
   const weeklyBoardHeaderEl = document.getElementById('weekly-board-header');
@@ -64,16 +104,35 @@
   const emptyDescEl = document.getElementById('empty-desc');
   const emptySuggestionsEl = document.getElementById('empty-suggestions');
 
-  // Günlük Notlar (Journal) Elemanları
-  const journalToggleBtn = document.getElementById('journal-toggle-btn');
-  const journalBodyEl = document.getElementById('journal-body');
+  // Sekme 2 ("30 Gün") Elemanları
+  const monthlyDateRangeEl = document.getElementById('monthly-date-range');
+  const monthlyOverallPercentEl = document.getElementById('monthly-overall-percent');
+  const monthlyTotalChecksEl = document.getElementById('monthly-total-checks');
+  const monthlyBestHabitEl = document.getElementById('monthly-best-habit');
+  const monthlyHabitListEl = document.getElementById('monthly-habit-list');
+  const monthlyEmptyStateEl = document.getElementById('monthly-empty-state');
+
+  // Sekme 3 ("Notlar") Elemanları
   const journalSelectedDateLabelEl = document.getElementById('journal-selected-date-label');
+  const journalDateInput = document.getElementById('journal-date-input');
+  const journalTodayBtn = document.getElementById('journal-today-btn');
   const journalStatusBadgeEl = document.getElementById('journal-status-badge');
   const journalDayPillsEl = document.getElementById('journal-day-pills');
   const journalTextarea = document.getElementById('journal-textarea');
   const journalFeedbackEl = document.getElementById('journal-feedback');
   const journalSaveBtn = document.getElementById('journal-save-btn');
   const journalClearBtn = document.getElementById('journal-clear-btn');
+  const notesHistoryCountEl = document.getElementById('notes-history-count');
+  const notesHistoryListEl = document.getElementById('notes-history-list');
+
+  // Sekme 4 ("Günün Sözü") Elemanları
+  const quoteDateBadgeEl = document.getElementById('quote-date-badge');
+  const quoteTextEl = document.getElementById('quote-text');
+  const quoteAuthorEl = document.getElementById('quote-author');
+  const quoteSourceTagEl = document.getElementById('quote-source-tag');
+  const newQuoteBtn = document.getElementById('new-quote-btn');
+  const copyQuoteBtn = document.getElementById('copy-quote-btn');
+  const copyQuoteLabelEl = document.getElementById('copy-quote-label');
 
   // Veri Yedekleme & Geri Yükleme Elemanları
   const exportJsonBtn = document.getElementById('export-json-btn');
@@ -83,15 +142,16 @@
 
   // Uygulama Durumu (State)
   let habits = [];
-  let dailyNotes = {}; // { "YYYY-MM-DD": "Not metni..." }
+  let dailyNotes = {};
   let activeCategoryFilter = 'all';
   let activeViewMode = localStorage.getItem(VIEW_MODE_KEY) === 'weekly' ? 'weekly' : 'daily';
+  let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || '7days';
   let editingHabitId = null;
   let selectedNoteDateKey = '';
   let noteSaveTimer = null;
 
   // ==========================================================================
-  // TARİH YARDIMCILARI (YYYY-MM-DD & Haftalık Pzt-Paz Hesaplama)
+  // TARİH YARDIMCILARI (YYYY-MM-DD, 7 Gün ve Son 30 Gün)
   // ==========================================================================
   function formatDateKey(dateObj) {
     const year = dateObj.getFullYear();
@@ -122,7 +182,8 @@
     const formatted = new Intl.DateTimeFormat('tr-TR', {
       weekday: 'long',
       day: 'numeric',
-      month: 'long'
+      month: 'long',
+      year: 'numeric'
     }).format(dt);
 
     const capitalized = formatted.charAt(0).toUpperCase() + formatted.slice(1);
@@ -135,7 +196,7 @@
   function getCurrentWeekDays() {
     const today = new Date();
     const todayKey = formatDateKey(today);
-    const dayOfWeek = today.getDay(); // 0: Paz, 1: Pzt, ..., 6: Cmt
+    const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
     const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + mondayOffset, 12, 0, 0);
@@ -155,6 +216,59 @@
       });
     }
     return days;
+  }
+
+  // Son 30 günü (29 gün önce -> bugün) sıralı döndürür
+  function getLast30Days() {
+    const today = new Date();
+    const todayKey = formatDateKey(today);
+    const days = [];
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i, 12, 0, 0);
+      const key = formatDateKey(d);
+      const jsDay = d.getDay();
+      const shortIdx = jsDay === 0 ? 6 : jsDay - 1;
+      days.push({
+        key,
+        shortName: DAY_SHORT_NAMES[shortIdx],
+        dayNum: d.getDate(),
+        monthShort: new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(d),
+        isToday: key === todayKey
+      });
+    }
+    return days;
+  }
+
+  // ==========================================================================
+  // ALT NAVİGASYON (BOTTOM TAB BAR) GEÇİŞ YÖNETİMİ
+  // ==========================================================================
+  function switchTab(tabName) {
+    const validTabs = ['7days', '30days', 'notes', 'quote'];
+    const target = validTabs.includes(tabName) ? tabName : '7days';
+    activeTab = target;
+    localStorage.setItem(ACTIVE_TAB_KEY, target);
+
+    bottomNavButtons.forEach((btn) => {
+      const isSelected = btn.dataset.tab === target;
+      btn.classList.toggle('active', isSelected);
+      btn.setAttribute('aria-selected', String(isSelected));
+    });
+
+    Object.entries(tabPanels).forEach(([key, panelEl]) => {
+      if (!panelEl) return;
+      const isMatch = key === target;
+      panelEl.hidden = !isMatch;
+      panelEl.classList.toggle('active', isMatch);
+    });
+
+    if (target === '30days') {
+      renderMonthly30DaysView();
+    } else if (target === 'notes') {
+      renderJournalSection();
+    } else if (target === 'quote') {
+      initQuoteOfTheDay(false);
+    }
   }
 
   // ==========================================================================
@@ -252,7 +366,7 @@
     });
   }
 
-  // Görünüm Modu (Günlük Liste / Haftalık Takvim)
+  // 7 Gün Sekmesi Görünüm Modu (Kartlar / Tablo)
   function applyViewMode(viewMode) {
     activeViewMode = viewMode === 'weekly' ? 'weekly' : 'daily';
     localStorage.setItem(VIEW_MODE_KEY, activeViewMode);
@@ -344,251 +458,14 @@
     }
   }
 
-  // ==========================================================================
-  // GÜNLÜK NOTLAR (DAILY REFLECTION / JOURNAL) YÖNETİMİ
-  // ==========================================================================
-  function loadNotes() {
-    try {
-      const raw = localStorage.getItem(NOTES_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      dailyNotes = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-    } catch (err) {
-      console.error('Günlük notlar okunamadı:', err);
-      dailyNotes = {};
-    }
-
-    selectedNoteDateKey = getTodayKey();
-    const isJournalOpen = localStorage.getItem(JOURNAL_OPEN_KEY) !== 'false';
-    setJournalAccordion(isJournalOpen);
-  }
-
-  function saveNotesToStorage() {
-    try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(dailyNotes));
-    } catch (err) {
-      console.error('Günlük notlar kaydedilemedi:', err);
-    }
-  }
-
-  function setJournalAccordion(isOpen) {
-    journalToggleBtn.setAttribute('aria-expanded', String(isOpen));
-    journalBodyEl.hidden = !isOpen;
-    localStorage.setItem(JOURNAL_OPEN_KEY, String(isOpen));
-  }
-
-  function selectJournalDate(dateKey) {
-    if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
-    selectedNoteDateKey = dateKey;
-    renderJournalSection();
-  }
-
-  function renderJournalSection() {
-    if (!selectedNoteDateKey) {
-      selectedNoteDateKey = getTodayKey();
-    }
-
-    const weekDays = getCurrentWeekDays();
-    const currentNote = dailyNotes[selectedNoteDateKey] || '';
-
-    journalSelectedDateLabelEl.textContent = formatHumanDateLabel(selectedNoteDateKey);
-    journalTextarea.value = currentNote;
-
-    const hasNote = currentNote.trim().length > 0;
-    journalStatusBadgeEl.textContent = hasNote ? 'Not kaydedildi' : 'Not yok';
-    journalStatusBadgeEl.classList.toggle('has-note', hasNote);
-
-    // Haftalık not gün haplarını oluştur
-    journalDayPillsEl.innerHTML = '';
-    weekDays.forEach((d) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      const isSelected = d.key === selectedNoteDateKey;
-      const dayHasNote = Boolean(dailyNotes[d.key] && dailyNotes[d.key].trim());
-
-      btn.className = `journal-day-pill${isSelected ? ' active' : ''}`;
-      btn.dataset.noteDate = d.key;
-      btn.setAttribute('role', 'tab');
-      btn.setAttribute('aria-selected', String(isSelected));
-      btn.title = `${d.dayNum} ${d.monthShort} ${d.shortName}${dayHasNote ? ' (Not var)' : ''}`;
-
-      btn.innerHTML = `
-        <span>${d.shortName} ${d.dayNum}</span>
-        ${dayHasNote ? '<span class="note-indicator" aria-hidden="true"></span>' : ''}
-      `;
-      journalDayPillsEl.appendChild(btn);
-    });
-  }
-
-  function persistCurrentJournalNote(showSavedMessage = true) {
-    if (!selectedNoteDateKey) return;
-    const text = journalTextarea.value.trim();
-
-    if (text) {
-      dailyNotes[selectedNoteDateKey] = text;
-    } else {
-      delete dailyNotes[selectedNoteDateKey];
-    }
-
-    saveNotesToStorage();
-
-    const hasNote = text.length > 0;
-    journalStatusBadgeEl.textContent = hasNote ? 'Not kaydedildi' : 'Not yok';
-    journalStatusBadgeEl.classList.toggle('has-note', hasNote);
-
-    // Gün haplarındaki yeşil nokta göstergesini güncelle
-    const weekDays = getCurrentWeekDays();
-    journalDayPillsEl.querySelectorAll('.journal-day-pill').forEach((pill, idx) => {
-      const d = weekDays[idx];
-      if (!d) return;
-      const dayHasNote = Boolean(dailyNotes[d.key] && dailyNotes[d.key].trim());
-      pill.innerHTML = `
-        <span>${d.shortName} ${d.dayNum}</span>
-        ${dayHasNote ? '<span class="note-indicator" aria-hidden="true"></span>' : ''}
-      `;
-    });
-
-    if (showSavedMessage) {
-      journalFeedbackEl.textContent = hasNote
-        ? `✓ ${formatHumanDateLabel(selectedNoteDateKey)} notu kaydedildi`
-        : 'Not temizlendi';
-      journalFeedbackEl.classList.add('saved');
-      setTimeout(() => {
-        journalFeedbackEl.classList.remove('saved');
-        journalFeedbackEl.textContent = 'Otomatik kaydedilir';
-      }, 2200);
-    }
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   // ==========================================================================
-  // JSON VERİ YEDEKLEME (EXPORT) VE GERİ YÜKLEME (IMPORT)
-  // ==========================================================================
-  function showBackupFeedback(message, isError = false) {
-    dataBackupStatusEl.textContent = message;
-    dataBackupStatusEl.classList.toggle('status-ok', !isError);
-    dataBackupStatusEl.classList.toggle('status-err', isError);
-
-    setTimeout(() => {
-      dataBackupStatusEl.classList.remove('status-ok', 'status-err');
-      dataBackupStatusEl.textContent =
-        'Verileriniz cihazınızda güvenle saklanır. JSON olarak yedekleyebilir veya geri yükleyebilirsiniz.';
-    }, 4500);
-  }
-
-  function exportBackupToJson() {
-    try {
-      const todayKey = getTodayKey();
-      const backupPayload = {
-        app: 'HabitFlow',
-        version: 4,
-        exportedAt: new Date().toISOString(),
-        theme: localStorage.getItem(THEME_KEY) || 'light',
-        viewMode: activeViewMode,
-        habits,
-        notes: dailyNotes
-      };
-
-      const jsonStr = JSON.stringify(backupPayload, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `habit-tracker-yedek-${todayKey}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showBackupFeedback(`✓ Yedek dosyası indirildi (habit-tracker-yedek-${todayKey}.json).`, false);
-    } catch (err) {
-      console.error('Yedekleme hatası:', err);
-      showBackupFeedback('Yedek dosyası oluşturulurken bir hata oluştu.', true);
-    }
-  }
-
-  function importBackupFromJsonFile(file) {
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(String(e.target.result || ''));
-
-        // Hem tam yedek nesnesini ({ habits, notes, theme }) hem de doğrudan alışkanlık dizisini destekle
-        let incomingHabits = null;
-        let incomingNotes = {};
-        let incomingTheme = null;
-        let incomingViewMode = null;
-
-        if (Array.isArray(parsed)) {
-          incomingHabits = parsed;
-        } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
-          incomingHabits = parsed.habits;
-          if (parsed.notes && typeof parsed.notes === 'object' && !Array.isArray(parsed.notes)) {
-            incomingNotes = parsed.notes;
-          }
-          if (typeof parsed.theme === 'string') {
-            incomingTheme = parsed.theme;
-          }
-          if (typeof parsed.viewMode === 'string') {
-            incomingViewMode = parsed.viewMode;
-          }
-        }
-
-        if (!incomingHabits) {
-          showBackupFeedback('Geçersiz yedek dosyası: Alışkanlık listesi bulunamadı.', true);
-          return;
-        }
-
-        const normalizedHabits = normalizeHabitList(incomingHabits);
-        const noteCount = Object.keys(incomingNotes).length;
-
-        const confirmed = window.confirm(
-          `Seçilen yedek dosyasında ${normalizedHabits.length} alışkanlık ve ${noteCount} günlük not bulundu.\n\nMevcut verilerinizin yerine bu yedeği geri yüklemek istiyor musunuz?`
-        );
-
-        if (!confirmed) {
-          importJsonInput.value = '';
-          return;
-        }
-
-        habits = normalizedHabits;
-        dailyNotes = incomingNotes;
-        saveHabits();
-        saveNotesToStorage();
-
-        if (incomingTheme) {
-          applyTheme(incomingTheme);
-        }
-        if (incomingViewMode) {
-          applyViewMode(incomingViewMode);
-        } else {
-          renderHabits();
-        }
-
-        renderJournalSection();
-        showBackupFeedback(
-          `✓ Yedek başarıyla geri yüklendi (${habits.length} alışkanlık, ${noteCount} not).`,
-          false
-        );
-      } catch (err) {
-        console.error('İçe aktarma hatası:', err);
-        showBackupFeedback('Seçilen dosya geçerli bir JSON yedek dosyası değil.', true);
-      } finally {
-        importJsonInput.value = '';
-      }
-    };
-
-    reader.onerror = () => {
-      showBackupFeedback('Dosya okunurken bir hata oluştu.', true);
-      importJsonInput.value = '';
-    };
-
-    reader.readAsText(file, 'utf-8');
-  }
-
-  // ==========================================================================
-  // ÜST İSTATİSTİK ÖZETİ VE İLERLEME ÇUBUĞU GÜNCELLEME
+  // SEKME 1 ("7 GÜN") — İSTATİSTİKLER VE HAFTALIK TAKİP
   // ==========================================================================
   function updateStatsAndProgress() {
     const todayKey = getTodayKey();
@@ -651,12 +528,6 @@
     }
   }
 
-  function escapeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
   function renderCategoryFilterPills() {
     const categoryCounts = new Map();
     habits.forEach((h) => {
@@ -713,7 +584,7 @@
     const daysColsHTML = weekDays
       .map(
         (d) => `
-        <div class="weekly-day-head${d.isToday ? ' is-today' : ''}" data-header-date="${d.key}" title="${d.dayNum} ${d.monthShort} notunu görüntüle">
+        <div class="weekly-day-head${d.isToday ? ' is-today' : ''}">
           <span class="d-name">${d.shortName}</span>
           <span class="d-num">${d.dayNum}</span>
         </div>
@@ -797,7 +668,6 @@
       </div>
     `;
 
-    // Haftalık Takvim Görünümü
     if (activeViewMode === 'weekly') {
       li.className = `habit-item weekly-row${todayCompleted ? ' completed' : ''}`;
       const cellsHTML = weekDays
@@ -842,7 +712,6 @@
       return li;
     }
 
-    // Günlük Liste Görünümü
     li.className = `habit-item${todayCompleted ? ' completed' : ''}`;
 
     const miniWeekPillsHTML = weekDays
@@ -907,7 +776,7 @@
         ${actionButtonsHTML}
       </div>
       <div class="habit-week-strip" aria-label="Bu Haftanın Günleri (Pzt - Paz)">
-        <span class="week-strip-label">Bu Hafta:</span>
+        <span class="week-strip-label">7 Gün (Pzt-Paz):</span>
         <div class="week-days-row">
           ${miniWeekPillsHTML}
         </div>
@@ -972,6 +841,10 @@
 
     updateStatsAndProgress();
 
+    if (activeTab === '30days') {
+      renderMonthly30DaysView();
+    }
+
     if (editingHabitId) {
       const editInput = habitListEl.querySelector('.habit-edit-title');
       if (editInput) {
@@ -981,6 +854,390 @@
     }
   }
 
+  // ==========================================================================
+  // SEKME 2 ("30 GÜN") — SON 30 GÜNLÜK PERFORMANS VE ETKİLEŞİMLİ IZGARA
+  // ==========================================================================
+  function renderMonthly30DaysView() {
+    const days30 = getLast30Days();
+    const firstDay = days30[0];
+    const lastDay = days30[days30.length - 1];
+    monthlyDateRangeEl.textContent = `${firstDay.dayNum} ${firstDay.monthShort} — ${lastDay.dayNum} ${lastDay.monthShort} (Son 30 Gün)`;
+
+    monthlyHabitListEl.innerHTML = '';
+
+    if (habits.length === 0) {
+      monthlyEmptyStateEl.hidden = false;
+      monthlyOverallPercentEl.textContent = '0%';
+      monthlyTotalChecksEl.textContent = '0 tamamlama';
+      monthlyBestHabitEl.textContent = '—';
+      return;
+    }
+
+    monthlyEmptyStateEl.hidden = true;
+
+    const days30KeySet = new Set(days30.map((d) => d.key));
+    let totalChecksIn30Days = 0;
+    let bestHabitTitle = '—';
+    let bestHabitCount = -1;
+
+    habits.forEach((habit) => {
+      let completedIn30 = 0;
+      if (Array.isArray(habit.completedDates)) {
+        habit.completedDates.forEach((dKey) => {
+          if (days30KeySet.has(dKey)) completedIn30++;
+        });
+      }
+
+      totalChecksIn30Days += completedIn30;
+      if (completedIn30 > bestHabitCount && completedIn30 > 0) {
+        bestHabitCount = completedIn30;
+        bestHabitTitle = `${habit.title} (${Math.round((completedIn30 / 30) * 100)}%)`;
+      }
+
+      const habitPercent = Math.round((completedIn30 / 30) * 100);
+      const isHighRate = habitPercent >= 70;
+      const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
+      const color = habit.color || getCategoryColor(habit.category);
+
+      const categoryBadge = habit.category
+        ? `<span class="category-tag" data-color="${color}">
+             <span class="cat-dot"></span>
+             ${escapeHTML(habit.category)}
+           </span>`
+        : '';
+
+      const gridCellsHTML = days30
+        .map((d) => {
+          const done = isCompletedOnDate(habit, d.key);
+          const classes = [
+            'month-day-cell',
+            done ? 'is-done' : '',
+            d.isToday ? 'is-today' : ''
+          ]
+            .filter(Boolean)
+            .join(' ');
+
+          const tooltip = `${d.dayNum} ${d.monthShort} (${d.shortName}) — ${done ? 'Tamamlandı (Geri almak için tıkla)' : 'Tamamlandı olarak işaretle'}`;
+          return `
+            <button
+              type="button"
+              class="${classes}"
+              data-month-habit-id="${habit.id}"
+              data-month-date-key="${d.key}"
+              title="${tooltip}"
+              aria-label="${tooltip}"
+              aria-pressed="${done}"
+            >
+              <span class="m-day-num">${done ? '✓' : d.dayNum}</span>
+              <span class="m-day-mon">${d.monthShort}</span>
+            </button>
+          `;
+        })
+        .join('');
+
+      const card = document.createElement('div');
+      card.className = 'card monthly-habit-card';
+      card.innerHTML = `
+        <div class="monthly-habit-header">
+          <div class="monthly-habit-title-wrap">
+            <span class="monthly-habit-title">${escapeHTML(habit.title)}</span>
+            <div class="habit-meta">
+              ${categoryBadge}
+              <span class="streak-badge${currentStreak > 0 ? ' has-streak' : ''}">
+                🔥 ${currentStreak} gün <span class="streak-best">(Rekor: ${bestStreak})</span>
+              </span>
+            </div>
+          </div>
+          <div class="monthly-habit-stats">
+            <span class="monthly-rate-pill${isHighRate ? ' high-rate' : ''}">
+              ${habitPercent}% (${completedIn30}/30 gün)
+            </span>
+          </div>
+        </div>
+        <div class="monthly-rate-bar" aria-hidden="true">
+          <div class="monthly-rate-fill${isHighRate ? ' high-rate' : ''}" style="width: ${habitPercent}%"></div>
+        </div>
+        <div class="monthly-grid-30" role="group" aria-label="${escapeHTML(habit.title)} son 30 gün ızgarası">
+          ${gridCellsHTML}
+        </div>
+      `;
+
+      monthlyHabitListEl.appendChild(card);
+    });
+
+    const maxPossible = habits.length * 30;
+    const overallPercent = maxPossible === 0 ? 0 : Math.round((totalChecksIn30Days / maxPossible) * 100);
+
+    monthlyOverallPercentEl.textContent = `${overallPercent}%`;
+    monthlyTotalChecksEl.textContent = `${totalChecksIn30Days} / ${maxPossible} gün`;
+    monthlyBestHabitEl.textContent = bestHabitTitle;
+  }
+
+  // ==========================================================================
+  // SEKME 3 ("NOTLAR") — GÜNLÜK YANSIMA VE GEÇMİŞ NOTLAR LİSTESİ
+  // ==========================================================================
+  function loadNotes() {
+    try {
+      const raw = localStorage.getItem(NOTES_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      dailyNotes = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch (err) {
+      console.error('Günlük notlar okunamadı:', err);
+      dailyNotes = {};
+    }
+    selectedNoteDateKey = getTodayKey();
+  }
+
+  function saveNotesToStorage() {
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(dailyNotes));
+    } catch (err) {
+      console.error('Günlük notlar kaydedilemedi:', err);
+    }
+  }
+
+  function selectJournalDate(dateKey) {
+    if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+    selectedNoteDateKey = dateKey;
+    renderJournalSection();
+  }
+
+  function renderNotesHistoryList() {
+    const entries = Object.entries(dailyNotes)
+      .filter(([key, val]) => /^\d{4}-\d{2}-\d{2}$/.test(key) && typeof val === 'string' && val.trim().length > 0)
+      .sort((a, b) => b[0].localeCompare(a[0]));
+
+    notesHistoryCountEl.textContent = `${entries.length} not`;
+    notesHistoryListEl.innerHTML = '';
+
+    if (entries.length === 0) {
+      notesHistoryListEl.innerHTML = `
+        <p class="note-history-empty">Henüz kaydedilmiş bir günlük not bulunmuyor. Yukarıdan bugünün ilk notunu yazıp kaydedebilirsin.</p>
+      `;
+      return;
+    }
+
+    entries.forEach(([dateKey, noteText]) => {
+      const item = document.createElement('div');
+      const isSelected = dateKey === selectedNoteDateKey;
+      item.className = `note-history-item${isSelected ? ' active-note' : ''}`;
+      item.dataset.historyDate = dateKey;
+
+      item.innerHTML = `
+        <div class="note-history-content">
+          <span class="note-history-date">${escapeHTML(formatHumanDateLabel(dateKey))}</span>
+          <p class="note-history-preview">${escapeHTML(noteText)}</p>
+        </div>
+        <button type="button" class="icon-btn delete-note-history-btn" data-delete-note-date="${dateKey}" title="Bu notu sil" aria-label="${escapeHTML(dateKey)} tarihli notu sil">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      `;
+      notesHistoryListEl.appendChild(item);
+    });
+  }
+
+  function renderJournalSection() {
+    if (!selectedNoteDateKey) {
+      selectedNoteDateKey = getTodayKey();
+    }
+
+    const weekDays = getCurrentWeekDays();
+    const currentNote = dailyNotes[selectedNoteDateKey] || '';
+
+    journalSelectedDateLabelEl.textContent = formatHumanDateLabel(selectedNoteDateKey);
+    if (journalDateInput) {
+      journalDateInput.value = selectedNoteDateKey;
+    }
+    journalTextarea.value = currentNote;
+
+    const hasNote = currentNote.trim().length > 0;
+    journalStatusBadgeEl.textContent = hasNote ? 'Not kaydedildi' : 'Not yok';
+    journalStatusBadgeEl.classList.toggle('has-note', hasNote);
+
+    journalDayPillsEl.innerHTML = '';
+    weekDays.forEach((d) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const isSelected = d.key === selectedNoteDateKey;
+      const dayHasNote = Boolean(dailyNotes[d.key] && dailyNotes[d.key].trim());
+
+      btn.className = `journal-day-pill${isSelected ? ' active' : ''}`;
+      btn.dataset.noteDate = d.key;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', String(isSelected));
+      btn.title = `${d.dayNum} ${d.monthShort} ${d.shortName}${dayHasNote ? ' (Not var)' : ''}`;
+
+      btn.innerHTML = `
+        <span>${d.shortName} ${d.dayNum}</span>
+        ${dayHasNote ? '<span class="note-indicator" aria-hidden="true"></span>' : ''}
+      `;
+      journalDayPillsEl.appendChild(btn);
+    });
+
+    renderNotesHistoryList();
+  }
+
+  function persistCurrentJournalNote(showSavedMessage = true) {
+    if (!selectedNoteDateKey) return;
+    const text = journalTextarea.value.trim();
+
+    if (text) {
+      dailyNotes[selectedNoteDateKey] = text;
+    } else {
+      delete dailyNotes[selectedNoteDateKey];
+    }
+
+    saveNotesToStorage();
+
+    const hasNote = text.length > 0;
+    journalStatusBadgeEl.textContent = hasNote ? 'Not kaydedildi' : 'Not yok';
+    journalStatusBadgeEl.classList.toggle('has-note', hasNote);
+
+    const weekDays = getCurrentWeekDays();
+    journalDayPillsEl.querySelectorAll('.journal-day-pill').forEach((pill, idx) => {
+      const d = weekDays[idx];
+      if (!d) return;
+      const dayHasNote = Boolean(dailyNotes[d.key] && dailyNotes[d.key].trim());
+      pill.innerHTML = `
+        <span>${d.shortName} ${d.dayNum}</span>
+        ${dayHasNote ? '<span class="note-indicator" aria-hidden="true"></span>' : ''}
+      `;
+    });
+
+    renderNotesHistoryList();
+
+    if (showSavedMessage) {
+      journalFeedbackEl.textContent = hasNote
+        ? `✓ ${formatHumanDateLabel(selectedNoteDateKey)} notu kaydedildi`
+        : 'Not silindi';
+      journalFeedbackEl.classList.add('saved');
+      setTimeout(() => {
+        journalFeedbackEl.classList.remove('saved');
+        journalFeedbackEl.textContent = 'Otomatik kaydedilir';
+      }, 2200);
+    }
+  }
+
+  // ==========================================================================
+  // SEKME 4 ("GÜNÜN SÖZÜ") — API + LOCALSTORAGE + 28 TÜRKÇE YEDEK SÖZ
+  // ==========================================================================
+  function getDeterministicFallbackQuote(dateKey, forceRandom = false) {
+    if (forceRandom) {
+      const idx = Math.floor(Math.random() * FALLBACK_TURKISH_QUOTES.length);
+      return {
+        ...FALLBACK_TURKISH_QUOTES[idx],
+        source: 'Olimpya Türkçe Koleksiyonu'
+      };
+    }
+
+    let hash = 0;
+    for (let i = 0; i < dateKey.length; i++) {
+      hash = dateKey.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const idx = Math.abs(hash) % FALLBACK_TURKISH_QUOTES.length;
+    return {
+      ...FALLBACK_TURKISH_QUOTES[idx],
+      source: 'Olimpya Türkçe Koleksiyonu'
+    };
+  }
+
+  function displayQuoteOnUI(quoteData) {
+    const todayKey = getTodayKey();
+    quoteDateBadgeEl.textContent = formatHumanDateLabel(todayKey);
+    quoteTextEl.textContent = quoteData.quote;
+    quoteAuthorEl.textContent = `— ${quoteData.author || 'Anonim'}`;
+    quoteSourceTagEl.textContent = quoteData.source || 'Günün Sözü';
+  }
+
+  async function fetchAndCacheQuote(forceNew = false) {
+    const todayKey = getTodayKey();
+
+    if (!forceNew) {
+      try {
+        const cachedRaw = localStorage.getItem(QUOTE_CACHE_KEY);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          if (cached && cached.date === todayKey && cached.quote) {
+            displayQuoteOnUI(cached);
+            return;
+          }
+        }
+      } catch (e) {
+        // Önbellek okunamazsa devam et
+      }
+    }
+
+    // Yüklenirken önce çevrimdışı yedeği hazır tut, API yanıt verirse güncelle
+    newQuoteBtn.disabled = true;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3800);
+
+      const response = await fetch('https://dummyjson.com/quotes/random', {
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error('API yanıt vermedi');
+      const data = await response.json();
+
+      if (data && typeof data.quote === 'string' && data.quote.trim()) {
+        const payload = {
+          date: todayKey,
+          quote: data.quote.trim(),
+          author: data.author || 'Anonim',
+          source: 'Günlük İlham Servisi'
+        };
+        localStorage.setItem(QUOTE_CACHE_KEY, JSON.stringify(payload));
+        displayQuoteOnUI(payload);
+        newQuoteBtn.disabled = false;
+        return;
+      }
+      throw new Error('Geçersiz söz verisi');
+    } catch (err) {
+      // Çevrimdışıysa veya API erişilemezse gömülü 28 Türkçe sözden göster
+      const fallback = getDeterministicFallbackQuote(todayKey, forceNew);
+      const payload = {
+        date: todayKey,
+        quote: fallback.quote,
+        author: fallback.author,
+        source: fallback.source
+      };
+      localStorage.setItem(QUOTE_CACHE_KEY, JSON.stringify(payload));
+      displayQuoteOnUI(payload);
+    } finally {
+      newQuoteBtn.disabled = false;
+    }
+  }
+
+  function initQuoteOfTheDay(forceNew = false) {
+    fetchAndCacheQuote(forceNew);
+  }
+
+  async function copyCurrentQuoteToClipboard() {
+    const textToCopy = `“${quoteTextEl.textContent}” ${quoteAuthorEl.textContent}`;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      copyQuoteLabelEl.textContent = '✓ Kopyalandı!';
+      setTimeout(() => {
+        copyQuoteLabelEl.textContent = 'Sözü Kopyala';
+      }, 2000);
+    } catch (err) {
+      copyQuoteLabelEl.textContent = 'Kopyalandı';
+      setTimeout(() => {
+        copyQuoteLabelEl.textContent = 'Sözü Kopyala';
+      }, 2000);
+    }
+  }
+
+  // ==========================================================================
+  // ALIŞKANLIK EKLEME, İŞARETLEME, DÜZENLEME VE SİLME
+  // ==========================================================================
   function getSelectedFormCategory() {
     const selectVal = habitCategorySelect.value;
     if (selectVal === '__custom__') {
@@ -1031,11 +1288,9 @@
     }
 
     saveHabits();
-
-    // Haftalık takvimden bir güne tıklandığında o günün notunu da otomatik göster
     selectJournalDate(dateKey);
 
-    if (animateIfToday && dateKey === todayKey && activeViewMode === 'daily') {
+    if (animateIfToday && dateKey === todayKey && activeViewMode === 'daily' && activeTab === '7days') {
       const itemEl = habitListEl.querySelector(`.habit-item[data-id="${id}"]`);
       if (itemEl) {
         itemEl.classList.toggle('completed', isCompletedToday(habit));
@@ -1103,6 +1358,134 @@
   }
 
   // ==========================================================================
+  // JSON VERİ YEDEKLEME (EXPORT) VE GERİ YÜKLEME (IMPORT)
+  // ==========================================================================
+  function showBackupFeedback(message, isError = false) {
+    dataBackupStatusEl.textContent = message;
+    dataBackupStatusEl.classList.toggle('status-ok', !isError);
+    dataBackupStatusEl.classList.toggle('status-err', isError);
+
+    setTimeout(() => {
+      dataBackupStatusEl.classList.remove('status-ok', 'status-err');
+      dataBackupStatusEl.textContent =
+        'Verileriniz cihazınızda güvenle saklanır. JSON olarak yedekleyebilir veya geri yükleyebilirsiniz.';
+    }, 4500);
+  }
+
+  function exportBackupToJson() {
+    try {
+      const todayKey = getTodayKey();
+      const backupPayload = {
+        app: 'Olimpya',
+        version: 5,
+        exportedAt: new Date().toISOString(),
+        theme: localStorage.getItem(THEME_KEY) || 'light',
+        viewMode: activeViewMode,
+        habits,
+        notes: dailyNotes
+      };
+
+      const jsonStr = JSON.stringify(backupPayload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habit-tracker-yedek-${todayKey}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showBackupFeedback(`✓ Yedek dosyası indirildi (habit-tracker-yedek-${todayKey}.json).`, false);
+    } catch (err) {
+      console.error('Yedekleme hatası:', err);
+      showBackupFeedback('Yedek dosyası oluşturulurken bir hata oluştu.', true);
+    }
+  }
+
+  function importBackupFromJsonFile(file) {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(String(e.target.result || ''));
+
+        let incomingHabits = null;
+        let incomingNotes = {};
+        let incomingTheme = null;
+        let incomingViewMode = null;
+
+        if (Array.isArray(parsed)) {
+          incomingHabits = parsed;
+        } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
+          incomingHabits = parsed.habits;
+          if (parsed.notes && typeof parsed.notes === 'object' && !Array.isArray(parsed.notes)) {
+            incomingNotes = parsed.notes;
+          }
+          if (typeof parsed.theme === 'string') {
+            incomingTheme = parsed.theme;
+          }
+          if (typeof parsed.viewMode === 'string') {
+            incomingViewMode = parsed.viewMode;
+          }
+        }
+
+        if (!incomingHabits) {
+          showBackupFeedback('Geçersiz yedek dosyası: Alışkanlık listesi bulunamadı.', true);
+          return;
+        }
+
+        const normalizedHabits = normalizeHabitList(incomingHabits);
+        const noteCount = Object.keys(incomingNotes).length;
+
+        const confirmed = window.confirm(
+          `Seçilen yedek dosyasında ${normalizedHabits.length} alışkanlık ve ${noteCount} günlük not bulundu.\n\nMevcut verilerinizin yerine bu yedeği geri yüklemek istiyor musunuz?`
+        );
+
+        if (!confirmed) {
+          importJsonInput.value = '';
+          return;
+        }
+
+        habits = normalizedHabits;
+        dailyNotes = incomingNotes;
+        saveHabits();
+        saveNotesToStorage();
+
+        if (incomingTheme) {
+          applyTheme(incomingTheme);
+        }
+        if (incomingViewMode) {
+          applyViewMode(incomingViewMode);
+        } else {
+          renderHabits();
+        }
+
+        renderMonthly30DaysView();
+        renderJournalSection();
+        showBackupFeedback(
+          `✓ Yedek başarıyla geri yüklendi (${habits.length} alışkanlık, ${noteCount} not).`,
+          false
+        );
+      } catch (err) {
+        console.error('İçe aktarma hatası:', err);
+        showBackupFeedback('Seçilen dosya geçerli bir JSON yedek dosyası değil.', true);
+      } finally {
+        importJsonInput.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      showBackupFeedback('Dosya okunurken bir hata oluştu.', true);
+      importJsonInput.value = '';
+    };
+
+    reader.readAsText(file, 'utf-8');
+  }
+
+  // ==========================================================================
   // PWA SERVICE WORKER KAYDI
   // ==========================================================================
   function registerServiceWorker() {
@@ -1118,6 +1501,12 @@
   // ==========================================================================
   // OLAY DİNLEYİCİLERİ (EVENT LISTENERS)
   // ==========================================================================
+  bottomNavButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      switchTab(btn.dataset.tab);
+    });
+  });
+
   themeButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       applyTheme(btn.dataset.themeValue);
@@ -1154,13 +1543,6 @@
     if (!pill) return;
     activeCategoryFilter = pill.dataset.filterCat;
     renderHabits();
-  });
-
-  weeklyBoardHeaderEl.addEventListener('click', (e) => {
-    const dayHead = e.target.closest('[data-header-date]');
-    if (dayHead && dayHead.dataset.headerDate) {
-      selectJournalDate(dayHead.dataset.headerDate);
-    }
   });
 
   habitListEl.addEventListener('change', (e) => {
@@ -1232,10 +1614,26 @@
 
   resetDayBtn.addEventListener('click', resetTodayProgress);
 
-  // Günlük Notlar (Journal) Olay Dinleyicileri
-  journalToggleBtn.addEventListener('click', () => {
-    const isExpanded = journalToggleBtn.getAttribute('aria-expanded') === 'true';
-    setJournalAccordion(!isExpanded);
+  // Sekme 2 ("30 Gün") Izgara Tıklama Dinleyicisi
+  monthlyHabitListEl.addEventListener('click', (e) => {
+    const cellBtn = e.target.closest('.month-day-cell');
+    if (!cellBtn) return;
+    const habitId = cellBtn.dataset.monthHabitId;
+    const dateKey = cellBtn.dataset.monthDateKey;
+    if (habitId && dateKey) {
+      toggleHabitOnDate(habitId, dateKey, false);
+    }
+  });
+
+  // Sekme 3 ("Notlar") Olay Dinleyicileri
+  journalDateInput.addEventListener('change', () => {
+    if (journalDateInput.value) {
+      selectJournalDate(journalDateInput.value);
+    }
+  });
+
+  journalTodayBtn.addEventListener('click', () => {
+    selectJournalDate(getTodayKey());
   });
 
   journalDayPillsEl.addEventListener('click', (e) => {
@@ -1261,6 +1659,30 @@
     persistCurrentJournalNote(true);
   });
 
+  notesHistoryListEl.addEventListener('click', (e) => {
+    const deleteNoteBtn = e.target.closest('.delete-note-history-btn');
+    if (deleteNoteBtn && deleteNoteBtn.dataset.deleteNoteDate) {
+      const targetDate = deleteNoteBtn.dataset.deleteNoteDate;
+      delete dailyNotes[targetDate];
+      saveNotesToStorage();
+      renderJournalSection();
+      return;
+    }
+
+    const historyItem = e.target.closest('.note-history-item');
+    if (historyItem && historyItem.dataset.historyDate) {
+      selectJournalDate(historyItem.dataset.historyDate);
+      journalTextarea.focus();
+    }
+  });
+
+  // Sekme 4 ("Günün Sözü") Olay Dinleyicileri
+  newQuoteBtn.addEventListener('click', () => {
+    initQuoteOfTheDay(true);
+  });
+
+  copyQuoteBtn.addEventListener('click', copyCurrentQuoteToClipboard);
+
   // Veri Yedekleme & Geri Yükleme Olay Dinleyicileri
   exportJsonBtn.addEventListener('click', exportBackupToJson);
 
@@ -1282,5 +1704,7 @@
   loadNotes();
   renderJournalSection();
   applyViewMode(activeViewMode);
+  initQuoteOfTheDay(false);
+  switchTab(activeTab);
   registerServiceWorker();
 })();

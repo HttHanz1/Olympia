@@ -1,7 +1,7 @@
 {
-  "name": "HabitFlow — Kişisel Alışkanlık & Seri Takibi",
-  "short_name": "HabitFlow",
-  "description": "Modern, hızlı ve çevrimdışı çalışabilen kişisel alışkanlık, seri ve günlük not takip uygulaması.",
+  "name": "Olimpya — Alışkanlık & Seri Takibi",
+  "short_name": "Olimpya",
+  "description": "Modern, hızlı ve çevrimdışı çalışabilen kişisel alışkanlık, 7/30 günlük seri, günlük not ve motivasyon takip uygulaması.",
   "lang": "tr-TR",
   "start_url": "./index.html",
   "scope": "./",

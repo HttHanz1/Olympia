@@ -188,7 +188,7 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   min-height: 100vh;
-  padding: 2rem 1.25rem 4rem;
+  padding: 1.75rem 1.25rem 6.75rem;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -1624,10 +1624,565 @@ textarea#journal-textarea:focus {
   flex-wrap: wrap;
 }
 
+/* ==========================================================================
+   SEKME PANELLERİ VE SABİT ALT NAVİGASYON ÇUBUĞU (BOTTOM TAB BAR)
+   ========================================================================== */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  animation: fadeTabIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-panel[hidden] {
+  display: none !important;
+}
+
+@keyframes fadeTabIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.bottom-nav-inner {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 560px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+  padding: 0.38rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.08), 0 10px 28px -4px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .bottom-nav-inner {
+  box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.45), 0 10px 28px -4px rgba(0, 0, 0, 0.65);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.24rem;
+  padding: 0.52rem 0.35rem;
+  border: none;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item svg {
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav-item:hover {
+  color: var(--text-main);
+  background-color: var(--bg-hover);
+}
+
+.bottom-nav-item.active {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.bottom-nav-item.active svg {
+  transform: translateY(-1px) scale(1.06);
+}
+
+/* ==========================================================================
+   SEKME 2: "30 GÜN" (AYLIK PERFORMANS & 30 KUTUCUKLU IZGARA)
+   ========================================================================== */
+.monthly-summary-card {
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.monthly-summary-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.monthly-summary-top h2 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.monthly-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.monthly-overall-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0.45rem 0.9rem;
+  border-radius: 12px;
+  background-color: var(--primary-soft);
+  border: 1px solid var(--border-color);
+}
+
+.monthly-big-percent {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.1;
+}
+
+.monthly-badge-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.monthly-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.monthly-mini-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.monthly-mini-item .m-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.monthly-mini-item .m-val {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.monthly-habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.monthly-habit-card {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.monthly-habit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.monthly-habit-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.monthly-habit-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.monthly-habit-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.monthly-rate-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.24rem 0.68rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+}
+
+.monthly-rate-pill.high-rate {
+  background-color: var(--success-soft);
+  color: var(--success);
+}
+
+.monthly-rate-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--track-bg);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.monthly-rate-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+  transition: width 0.35s ease;
+}
+
+.monthly-rate-fill.high-rate {
+  background: linear-gradient(90deg, var(--success), #34d399);
+}
+
+/* 30 Kutucuklu Etkileşimli Izgara */
+.monthly-grid-30 {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.38rem;
+}
+
+.month-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-secondary);
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.15rem;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+
+.month-day-cell .m-day-num {
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.month-day-cell .m-day-mon {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.month-day-cell:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.month-day-cell.is-today {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.month-day-cell.is-done {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: #ffffff;
+}
+
+.month-day-cell.is-done .m-day-mon {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ==========================================================================
+   SEKME 3: "NOTLAR" (FERAH NOT EKRANI VE GEÇMİŞ NOTLAR LİSTESİ)
+   ========================================================================== */
+.notes-page-card {
+  padding: 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notes-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.notes-date-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.notes-date-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.notes-date-input {
+  padding: 0.44rem 0.7rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-main);
+  background-color: var(--bg-input);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.notes-date-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.journal-feedback-group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.notes-history-card {
+  padding: 1.2rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.notes-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.notes-history-header h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.notes-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.note-history-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.note-history-item:hover {
+  border-color: var(--primary);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.note-history-item.active-note {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
+}
+
+.note-history-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-history-date {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.2rem;
+}
+
+.note-history-preview {
+  font-size: 0.86rem;
+  color: var(--text-main);
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.note-history-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1.25rem 0.5rem;
+}
+
+/* ==========================================================================
+   SEKME 4: "GÜNÜN SÖZÜ" (QUOTE OF THE DAY)
+   ========================================================================== */
+.quote-hero-card {
+  padding: 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background-image: radial-gradient(circle at 50% 0%, var(--primary-soft), transparent 65%);
+}
+
+.quote-top-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.quote-day-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.quote-source-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.quote-mark-icon {
+  font-size: 4rem;
+  line-height: 0.8;
+  font-weight: 800;
+  color: var(--primary);
+  opacity: 0.25;
+  margin-bottom: 0.5rem;
+  user-select: none;
+}
+
+.quote-blockquote {
+  max-width: 560px;
+  margin: 0 auto 1.65rem;
+}
+
+.quote-text {
+  font-size: 1.22rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+.quote-author-row {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.quote-author {
+  font-style: normal;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.quote-source-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.quote-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.quote-btn {
+  padding: 0.62rem 1.15rem;
+  font-size: 0.85rem;
+}
+
 /* Mobil Uyumluluk (Responsive) */
 @media (max-width: 680px) {
   body {
-    padding: 1.25rem 0.85rem 3rem;
+    padding: 1.15rem 0.85rem 6.75rem;
+  }
+
+  .monthly-grid-30 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .quote-hero-card {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .quote-text {
+    font-size: 1.08rem;
   }
 
   .app-header {
