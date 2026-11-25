@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Olimpya — Modern, hızlı ve çevrimdışı çalışan 7/30 günlük alışkanlık, seri, günlük not ve motivasyon uygulaması." />
+  <meta name="description" content="Olimpya — Modern, hızlı ve çevrimdışı çalışan alışkanlık, takvim, görev, ilerleme, günlük not ve motivasyon uygulaması." />
   <meta name="theme-color" id="meta-theme-color" content="#4f46e5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,12 +11,12 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="apple-touch-icon" href="icon.svg" />
-  <title>Olimpya — Kişisel Alışkanlık & Seri Takibi</title>
+  <title>Olimpya — Kişisel Alışkanlık & Planlama</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-container">
-    <!-- Üst Bilgi, Tarih ve Tema Seçici -->
+    <!-- Üst Başlık Çubuğu (Header): Sol Tarih/Logo, Sağ Minimalist Ayarlar İkonu -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">
@@ -31,118 +31,19 @@
       </div>
 
       <div class="header-actions">
-        <!-- 3 Modlu Kişisel Tema Seçici -->
-        <div class="theme-switcher" role="radiogroup" aria-label="Tema Seçici">
-          <button type="button" class="theme-btn active" data-theme-value="light" role="radio" aria-checked="true" title="Aydınlık Tema">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-            <span>Aydınlık</span>
-          </button>
-          <button type="button" class="theme-btn" data-theme-value="dark" role="radio" aria-checked="false" title="Koyu Tema">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-            <span>Koyu</span>
-          </button>
-          <button type="button" class="theme-btn" data-theme-value="pastel" role="radio" aria-checked="false" title="Pastel Minimal Tema">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
-            </svg>
-            <span>Pastel</span>
-          </button>
-        </div>
-
-        <button id="reset-day-btn" class="secondary-btn" title="Bugünkü işaretleri sıfırla">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
+        <button type="button" id="open-settings-btn" class="icon-header-btn" title="Ayarlar" aria-label="Ayarları Aç" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-          <span>Günü Sıfırla</span>
         </button>
       </div>
     </header>
 
     <!-- ======================================================================
-         SEKME 1: "7 GÜN" (HAFTALIK TAKİP & GÜNLÜK ALIŞKANLIKLAR)
+         SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI
          ====================================================================== -->
     <main id="tab-panel-7days" class="tab-panel active" role="tabpanel" aria-labelledby="nav-btn-7days">
-      <!-- Üst İstatistik Özeti (3 Kompakt Kart) ve Günlük İlerleme Çubuğu -->
-      <section class="stats-overview" aria-label="İstatistik Özeti">
-        <div class="stats-grid">
-          <!-- Kart 1: Bugünkü İlerleme (%) -->
-          <div class="card stat-card">
-            <div class="stat-icon stat-icon-primary" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Bugünkü İlerleme</span>
-              <div class="stat-value-row">
-                <strong id="progress-percent" class="stat-value">0%</strong>
-                <span id="progress-count" class="stat-sub">0 / 0</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Kart 2: En Yüksek Aktif Seri -->
-          <div class="card stat-card">
-            <div class="stat-icon stat-icon-streak" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">En Yüksek Aktif Seri</span>
-              <div class="stat-value-row">
-                <strong id="top-streak-value" class="stat-value">0 gün</strong>
-                <span id="best-record-sub" class="stat-sub">Rekor: 0 gün</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Kart 3: Bu Haftaki Toplam Tamamlama -->
-          <div class="card stat-card">
-            <div class="stat-icon stat-icon-weekly" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Bu Haftaki Tamamlama</span>
-              <div class="stat-value-row">
-                <strong id="weekly-total-value" class="stat-value">0</strong>
-                <span id="weekly-range-sub" class="stat-sub">Pzt - Paz</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Günlük İlerleme Çubuğu Kartı -->
-        <div class="card progress-card">
-          <div class="progress-header">
-            <p id="progress-message" class="progress-subtitle">Yeni bir güne harika bir başlangıç yap!</p>
-            <span id="progress-ratio-badge" class="progress-ratio-badge">0 / 0 tamamlandı</span>
-          </div>
-          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-container">
-            <div id="progress-fill" class="progress-fill"></div>
-          </div>
-        </div>
-      </section>
-
       <!-- Yeni Alışkanlık Ekleme Formu -->
       <section class="card form-card" aria-label="Yeni Alışkanlık Ekle">
         <form id="habit-form" autocomplete="off">
@@ -152,7 +53,7 @@
               <input
                 type="text"
                 id="habit-title"
-                placeholder="Yeni bir alışkanlık yazın (örn. 20 sayfa kitap oku)..."
+                placeholder="Yeni bir alışkanlık ekle (örn. 20 sayfa kitap oku)..."
                 maxlength="80"
                 required
               />
@@ -208,7 +109,24 @@
         </form>
       </section>
 
-      <!-- Alışkanlık Listesi, Kategori Filtre Hapları ve 7 Gün Görünüm Seçici -->
+      <!-- Bugünün Özel Görevleri (Takvimden bugüne görev eklendiyse görünür) -->
+      <section id="today-tasks-section" class="today-tasks-section" aria-label="Bugünün Özel Görevleri" hidden>
+        <div class="today-tasks-header">
+          <span class="today-tasks-title">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Bugüne Özel Planlanan Görevler</span>
+          </span>
+          <button type="button" id="go-calendar-from-tasks-btn" class="text-link-btn">+ Takvimde Düzenle</button>
+        </div>
+        <ul id="today-tasks-list" class="habit-list"></ul>
+      </section>
+
+      <!-- Alışkanlık Listesi ve Kategori Filtre Hapları -->
       <section class="habits-section" aria-label="7 Günlük Alışkanlık Listesi">
         <div class="list-toolbar">
           <div id="category-filter-pills" class="filter-pills" role="tablist" aria-label="Kategori Filtreleri"></div>
@@ -216,7 +134,7 @@
           <div class="toolbar-right">
             <span id="visible-habit-count" class="list-meta-count"></span>
             <div class="view-switcher" role="tablist" aria-label="7 Gün Görünüm Modu">
-              <button type="button" class="view-btn active" data-view="daily" role="tab" aria-selected="true">
+              <button type="button" class="view-btn active" data-view="daily" role="tab" aria-selected="true" title="Kart Görünümü">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="8" y1="6" x2="21" y2="6"></line>
                   <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -227,7 +145,7 @@
                 </svg>
                 <span>Kartlar</span>
               </button>
-              <button type="button" class="view-btn" data-view="weekly" role="tab" aria-selected="false">
+              <button type="button" class="view-btn" data-view="weekly" role="tab" aria-selected="false" title="Tablo Görünümü">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -266,55 +184,227 @@
     </main>
 
     <!-- ======================================================================
-         SEKME 2: "30 GÜN" (AYLIK PERFORMANS VE 30 KUTUCUKLU IZGARA)
+         SEKME 2: YILLIK "TAKVİM" SEKMESİ (AY AY İLERLEMELİ & GÖREV EKLEMELİ)
          ====================================================================== -->
-    <section id="tab-panel-30days" class="tab-panel" role="tabpanel" aria-labelledby="nav-btn-30days" hidden>
-      <!-- Aylık Özet Başlığı & İstatistikleri -->
-      <div class="card monthly-summary-card">
-        <div class="monthly-summary-top">
-          <div>
-            <h2>Son 30 Günlük Performans</h2>
-            <p id="monthly-date-range" class="monthly-subtitle">Son 30 günün alışkanlık istikrarı</p>
+    <section id="tab-panel-calendar" class="tab-panel" role="tabpanel" aria-labelledby="nav-btn-calendar" hidden>
+      <!-- Aylık Takvim Kartı -->
+      <div class="card calendar-card">
+        <div class="calendar-nav-header">
+          <div class="calendar-month-title-group">
+            <h2 id="calendar-month-year-label">Kasım 2026</h2>
+            <p class="calendar-subtitle">Bir güne tıklayarak alışkanlıkları işaretle veya o güne özel görev planla</p>
           </div>
-          <div class="monthly-overall-badge">
-            <span id="monthly-overall-percent" class="monthly-big-percent">0%</span>
-            <span class="monthly-badge-label">Aylık Ortalama</span>
+          <div class="calendar-nav-controls">
+            <button type="button" id="cal-prev-month-btn" class="icon-btn cal-nav-btn" title="Önceki Ay" aria-label="Önceki Ay">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button type="button" id="cal-today-btn" class="secondary-btn cal-today-btn">Bugüne Dön</button>
+            <button type="button" id="cal-next-month-btn" class="icon-btn cal-nav-btn" title="Sonraki Ay" aria-label="Sonraki Ay">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
           </div>
         </div>
-        <div class="monthly-mini-stats">
-          <div class="monthly-mini-item">
-            <span class="m-label">30 Günde Toplam</span>
-            <strong id="monthly-total-checks" class="m-val">0 tamamlama</strong>
+
+        <!-- Haftanın Günleri Başlığı (Pzt - Paz) -->
+        <div class="calendar-weekdays-row" aria-hidden="true">
+          <span>Pzt</span>
+          <span>Sal</span>
+          <span>Çar</span>
+          <span>Per</span>
+          <span>Cum</span>
+          <span>Cmt</span>
+          <span>Paz</span>
+        </div>
+
+        <!-- Aylık Günler Izgarası -->
+        <div id="calendar-days-grid" class="calendar-days-grid" role="grid" aria-label="Aylık Takvim Günleri"></div>
+
+        <!-- Takvim Göstergeleri Açıklaması -->
+        <div class="calendar-legend">
+          <span class="legend-item"><span class="legend-dot dot-habit-done"></span>Tamamlanan Alışkanlık</span>
+          <span class="legend-item"><span class="legend-dot dot-task-planned"></span>Güne Özel Görev</span>
+          <span class="legend-item"><span class="legend-dot dot-note-saved"></span>Günlük Not</span>
+        </div>
+      </div>
+
+      <!-- Seçili Gün Detayı ve "Bu Güne Görev Ekle" Alt Paneli -->
+      <div id="calendar-day-detail" class="card calendar-day-detail">
+        <div class="day-detail-header">
+          <div>
+            <span class="day-detail-eyebrow">Seçili Gün Detayı</span>
+            <h3 id="day-detail-title">Bugün</h3>
           </div>
-          <div class="monthly-mini-item">
-            <span class="m-label">En İstikrarlı Alışkanlık</span>
-            <strong id="monthly-best-habit" class="m-val">—</strong>
+          <span id="day-detail-summary-badge" class="progress-ratio-badge">0 görev • 0 alışkanlık</span>
+        </div>
+
+        <!-- A) Bu Güne Özel Görev Ekleme ve Görev Listesi -->
+        <div class="day-detail-block">
+          <h4 class="day-detail-section-title">Bu Güne Özel Görevler & Hatırlatmalar</h4>
+          <form id="day-task-form" class="day-task-form" autocomplete="off">
+            <label for="day-task-input" class="sr-only">Bu güne görev ekle</label>
+            <input
+              type="text"
+              id="day-task-input"
+              placeholder="Bu güne özel görev ekle (örn. Dişçi randevusu 14:30)..."
+              maxlength="100"
+              required
+            />
+            <button type="submit" class="primary-btn day-task-submit-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Görev Ekle</span>
+            </button>
+          </form>
+          <ul id="day-detail-tasks-list" class="day-detail-list"></ul>
+        </div>
+
+        <!-- B) O Güne Ait Alışkanlıklar -->
+        <div class="day-detail-block">
+          <div class="day-detail-sub-row">
+            <h4 class="day-detail-section-title">Günlük Alışkanlıklar</h4>
+            <span id="day-detail-future-notice" class="day-future-notice" hidden>Gelecek günler için alışkanlık işaretlenemez</span>
+          </div>
+          <ul id="day-detail-habits-list" class="day-detail-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SEKME 3: AYRI "İLERLEME" SEKMESİ (TÜM İSTATİSTİKLER & ANALİZLER)
+         ====================================================================== -->
+    <section id="tab-panel-progress" class="tab-panel" role="tabpanel" aria-labelledby="nav-btn-progress" hidden>
+      <!-- Bugünkü Tamamlanma Yüzdesi (Dairesel Halka + Yatay İlerleme Kartı) -->
+      <div class="card progress-hero-card">
+        <div class="progress-ring-wrap" aria-hidden="true">
+          <svg class="progress-ring-svg" width="104" height="104" viewBox="0 0 104 104">
+            <circle class="progress-ring-bg" cx="52" cy="52" r="42" stroke-width="10" fill="none"></circle>
+            <circle id="progress-ring-circle" class="progress-ring-fg" cx="52" cy="52" r="42" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="263.89" stroke-dashoffset="263.89"></circle>
+          </svg>
+          <div class="progress-ring-center">
+            <strong id="progress-percent" class="ring-percent-text">0%</strong>
+          </div>
+        </div>
+
+        <div class="progress-hero-info">
+          <div class="progress-hero-top">
+            <div>
+              <h2>Bugünkü Tamamlanma Oranı</h2>
+              <p id="progress-message" class="progress-subtitle">Yeni bir güne harika bir başlangıç yap!</p>
+            </div>
+            <span id="progress-ratio-badge" class="progress-ratio-badge">0 / 0 tamamlandı</span>
+          </div>
+
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-container">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+
+          <div class="progress-hero-actions">
+            <span id="progress-count" class="stat-sub">Bugün 0 alışkanlık tamamlandı</span>
+            <button type="button" id="reset-day-btn" class="secondary-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              <span>Bugünü Sıfırla</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- 30 Günlük Alışkanlık Kartları Listesi -->
-      <div id="monthly-habit-list" class="monthly-habit-list"></div>
+      <!-- 4'lü İstatistik Özeti (Aktif Seri, Tüm Zamanların Rekoru, Bu Hafta, Bu Ay) -->
+      <div class="stats-grid-4">
+        <div class="card stat-card">
+          <div class="stat-icon stat-icon-streak" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">En Yüksek Aktif Seri</span>
+            <div class="stat-value-row">
+              <strong id="top-streak-value" class="stat-value">🔥 0 gün</strong>
+            </div>
+          </div>
+        </div>
 
-      <!-- 30 Gün Boş Durum -->
-      <div id="monthly-empty-state" class="card empty-state" hidden>
-        <div class="empty-illustration" aria-hidden="true">
-          <div class="empty-icon-ring">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <div class="card stat-card">
+          <div class="stat-icon stat-icon-primary" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="7"></circle>
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Tüm Zamanlar Rekoru</span>
+            <div class="stat-value-row">
+              <strong id="best-record-sub" class="stat-value">0 gün</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-icon stat-icon-weekly" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
+          <div class="stat-info">
+            <span class="stat-label">Bu Haftaki Tamamlama</span>
+            <div class="stat-value-row">
+              <strong id="weekly-total-value" class="stat-value">0 kez</strong>
+              <span id="weekly-range-sub" class="stat-sub">Pzt - Paz</span>
+            </div>
+          </div>
         </div>
-        <h3>Aylık görünüm için alışkanlık ekleyin</h3>
-        <p>"7 Gün" sekmesinden alışkanlık eklediğinizde son 30 günlük performans ızgarası burada görünecek.</p>
+
+        <div class="card stat-card">
+          <div class="stat-icon stat-icon-primary" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20V10"></path>
+              <path d="M18 20V4"></path>
+              <path d="M6 20v-4"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Bu Ayki Tamamlama</span>
+            <div class="stat-value-row">
+              <strong id="monthly-total-value" class="stat-value">0 kez</strong>
+              <span id="monthly-name-sub" class="stat-sub">Bu Ay</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kategori Bazlı Başarı Yüzdeleri -->
+      <div class="card breakdown-card">
+        <div class="breakdown-header">
+          <h3>Kategori Bazlı Başarı Oranları</h3>
+          <span class="stat-sub">Son 30 Günlük Performans</span>
+        </div>
+        <div id="category-breakdown-list" class="breakdown-list"></div>
+      </div>
+
+      <!-- Alışkanlık Bazlı Tekil Başarı Yüzdeleri Listesi -->
+      <div class="card breakdown-card">
+        <div class="breakdown-header">
+          <h3>Alışkanlık Bazlı Başarı Yüzdeleri</h3>
+          <span class="stat-sub">Son 30 Gün & Seri Durumu</span>
+        </div>
+        <div id="habit-breakdown-list" class="breakdown-list"></div>
       </div>
     </section>
 
     <!-- ======================================================================
-         SEKME 3: "NOTLAR" (GÜNLÜK YANSIMA & GEÇMİŞ NOTLAR LİSTESİ)
+         SEKME 4: "NOTLAR" (GÜNLÜK YANSIMA & GEÇMİŞ NOTLAR LİSTESİ)
          ====================================================================== -->
     <section id="tab-panel-notes" class="tab-panel" role="tabpanel" aria-labelledby="nav-btn-notes" hidden>
       <div class="card notes-page-card">
@@ -388,7 +478,7 @@
     </section>
 
     <!-- ======================================================================
-         SEKME 4: "GÜNÜN SÖZÜ" (QUOTE OF THE DAY)
+         SEKME 5: "SÖZ" (GÜNÜN SÖZÜ / QUOTE OF THE DAY)
          ====================================================================== -->
     <section id="tab-panel-quote" class="tab-panel" role="tabpanel" aria-labelledby="nav-btn-quote" hidden>
       <div class="card quote-hero-card">
@@ -432,46 +522,123 @@
         </div>
       </div>
     </section>
-
-    <!-- Veri Yedekleme ve Geri Yükleme (JSON Export / Import) Alt Çubuğu -->
-    <footer class="card data-footer" aria-label="Veri Yedekleme ve Geri Yükleme">
-      <div class="data-footer-info">
-        <div class="data-footer-title">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          </svg>
-          <span>Veri Yedekleme & Çevrimdışı Depolama</span>
-        </div>
-        <p id="data-backup-status" class="data-footer-desc">Verileriniz cihazınızda güvenle saklanır. JSON olarak yedekleyebilir veya geri yükleyebilirsiniz.</p>
-      </div>
-
-      <div class="data-footer-actions">
-        <button type="button" id="export-json-btn" class="secondary-btn" title="Tüm verileri JSON dosyası olarak indir">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span>Yedekle (Dışa Aktar)</span>
-        </button>
-
-        <button type="button" id="import-json-btn" class="secondary-btn" title="JSON yedek dosyasından verileri geri yükle">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <span>Geri Yükle (İçe Aktar)</span>
-        </button>
-        <input type="file" id="import-json-input" accept=".json,application/json" class="sr-only" />
-      </div>
-    </footer>
   </div>
 
   <!-- ========================================================================
-       SABİT ALT NAVİGASYON ÇUBUĞU (BOTTOM TAB BAR)
+       AYARLAR PENCERESİ (MODAL): "Görünüm" & "Veri ve Depolama"
+       ======================================================================== -->
+  <div id="settings-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" hidden>
+    <div class="card modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <h2 id="settings-modal-title">Ayarlar</h2>
+        </div>
+        <button type="button" id="close-settings-btn" class="icon-btn" title="Kapat" aria-label="Ayarları Kapat">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Sekme Başlıkları -->
+      <div class="modal-tabs" role="tablist" aria-label="Ayar Sekmeleri">
+        <button type="button" class="modal-tab-btn active" data-settings-tab="appearance" role="tab" aria-selected="true">
+          Görünüm
+        </button>
+        <button type="button" class="modal-tab-btn" data-settings-tab="storage" role="tab" aria-selected="false">
+          Veri ve Depolama
+        </button>
+      </div>
+
+      <!-- Modal Sekme 1: Görünüm -->
+      <div id="settings-pane-appearance" class="modal-pane" role="tabpanel">
+        <p class="modal-section-desc">Gözünüze en uygun renk temasını seçin. Seçiminiz cihazınızda otomatik hatırlanır.</p>
+        <div class="theme-cards-grid" role="radiogroup" aria-label="Tema Seçici">
+          <button type="button" class="theme-option-card theme-btn active" data-theme-value="light" role="radio" aria-checked="true">
+            <div class="theme-preview preview-light"></div>
+            <div class="theme-option-info">
+              <strong>Aydınlık (Light)</strong>
+              <span>Ferah, yüksek kontrastlı gündüz teması</span>
+            </div>
+          </button>
+
+          <button type="button" class="theme-option-card theme-btn" data-theme-value="dark" role="radio" aria-checked="false">
+            <div class="theme-preview preview-dark"></div>
+            <div class="theme-option-info">
+              <strong>Koyu (Dark)</strong>
+              <span>Gece kullanımı için göz yormayan koyu tema</span>
+            </div>
+          </button>
+
+          <button type="button" class="theme-option-card theme-btn" data-theme-value="pastel" role="radio" aria-checked="false">
+            <div class="theme-preview preview-pastel"></div>
+            <div class="theme-option-info">
+              <strong>Pastel Minimal</strong>
+              <span>Sıcak krem tonlarında yumuşak kağıt hissi</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Sekme 2: Veri ve Depolama -->
+      <div id="settings-pane-storage" class="modal-pane" role="tabpanel" hidden>
+        <div class="storage-usage-box">
+          <div class="storage-usage-row">
+            <span class="storage-label">Yerel Depolama (localStorage) Kullanımı</span>
+            <strong id="storage-usage-text" class="storage-val">0 KB</strong>
+          </div>
+          <p id="storage-counts-text" class="storage-sub">0 alışkanlık • 0 özel görev • 0 günlük not</p>
+        </div>
+
+        <div class="storage-actions-block">
+          <h4>Yedekleme ve Geri Yükleme (JSON)</h4>
+          <p class="modal-section-desc">Tüm alışkanlıklarınızı, takvim görevlerinizi, günlük notlarınızı ve tema ayarınızı JSON dosyası olarak yedekleyebilir veya başka bir cihaza aktarabilirsiniz.</p>
+
+          <div class="storage-buttons-row">
+            <button type="button" id="export-json-btn" class="primary-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>JSON Yedekle (Dışa Aktar)</span>
+            </button>
+
+            <button type="button" id="import-json-btn" class="secondary-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>JSON Geri Yükle (İçe Aktar)</span>
+            </button>
+            <input type="file" id="import-json-input" accept=".json,application/json" class="sr-only" />
+          </div>
+          <p id="data-backup-status" class="data-footer-desc"></p>
+        </div>
+
+        <div class="danger-zone-block">
+          <h4>Tehlikeli Bölge</h4>
+          <p class="modal-section-desc">Cihazdaki tüm alışkanlıkları, seri geçmişini, takvim görevlerini ve notları kalıcı olarak siler.</p>
+          <button type="button" id="reset-all-data-btn" class="danger-btn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Tüm Verileri Sıfırla</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       SABİT ALT NAVİGASYON ÇUBUĞU (5 SEKMELİ KOMPAKT MOBİL DÜZEN)
        ======================================================================== -->
   <nav class="bottom-nav" role="tablist" aria-label="Ana Navigasyon">
     <div class="bottom-nav-inner">
@@ -484,7 +651,7 @@
         aria-selected="true"
         aria-controls="tab-panel-7days"
       >
-        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
@@ -493,21 +660,37 @@
 
       <button
         type="button"
-        id="nav-btn-30days"
+        id="nav-btn-calendar"
         class="bottom-nav-item"
-        data-tab="30days"
+        data-tab="calendar"
         role="tab"
         aria-selected="false"
-        aria-controls="tab-panel-30days"
+        aria-controls="tab-panel-calendar"
       >
-        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="16" y1="2" x2="16" y2="6"></line>
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
-          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
         </svg>
-        <span>30 Gün</span>
+        <span>Takvim</span>
+      </button>
+
+      <button
+        type="button"
+        id="nav-btn-progress"
+        class="bottom-nav-item"
+        data-tab="progress"
+        role="tab"
+        aria-selected="false"
+        aria-controls="tab-panel-progress"
+      >
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <span>İlerleme</span>
       </button>
 
       <button
@@ -519,7 +702,7 @@
         aria-selected="false"
         aria-controls="tab-panel-notes"
       >
-        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
           <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -537,10 +720,10 @@
         aria-selected="false"
         aria-controls="tab-panel-quote"
       >
-        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
         </svg>
-        <span>Günün Sözü</span>
+        <span>Söz</span>
       </button>
     </div>
   </nav>

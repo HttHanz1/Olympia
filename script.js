@@ -1,9 +1,10 @@
 (() => {
   const STORAGE_KEY = 'habitflow_habits_v1';
   const NOTES_KEY = 'habitflow_notes_v1';
+  const TASKS_KEY = 'habitflow_tasks_v1';
   const THEME_KEY = 'habitflow_theme_v1';
   const VIEW_MODE_KEY = 'habitflow_view_v1';
-  const ACTIVE_TAB_KEY = 'olimpya_active_tab_v1';
+  const ACTIVE_TAB_KEY = 'olimpya_active_tab_v2';
   const QUOTE_CACHE_KEY = 'olimpya_daily_quote_v1';
 
   // Çevrimdışı (Offline) Koruma İçin Gömülü 28 Adet Türkçe Disiplin, Alışkanlık ve Motivasyon Sözü
@@ -59,44 +60,49 @@
 
   const COLOR_PALETTE = ['emerald', 'indigo', 'amber', 'purple', 'rose', 'cyan'];
   const DAY_SHORT_NAMES = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+  const RING_CIRCUMFERENCE = 2 * Math.PI * 42; // r=42 -> ~263.89
 
-  // DOM Elemanları — Genel & Üst Bilgi
+  // DOM Elemanları — Üst Başlık ve Ayarlar Modalı
   const currentDateEl = document.getElementById('current-date');
   const metaThemeColorEl = document.getElementById('meta-theme-color');
-  const resetDayBtn = document.getElementById('reset-day-btn');
+  const openSettingsBtn = document.getElementById('open-settings-btn');
+  const closeSettingsBtn = document.getElementById('close-settings-btn');
+  const settingsModalBackdrop = document.getElementById('settings-modal-backdrop');
+  const modalTabButtons = document.querySelectorAll('.modal-tab-btn');
+  const settingsPaneAppearance = document.getElementById('settings-pane-appearance');
+  const settingsPaneStorage = document.getElementById('settings-pane-storage');
   const themeButtons = document.querySelectorAll('.theme-btn');
-  const viewButtons = document.querySelectorAll('.view-btn');
+  const storageUsageTextEl = document.getElementById('storage-usage-text');
+  const storageCountsTextEl = document.getElementById('storage-counts-text');
+  const exportJsonBtn = document.getElementById('export-json-btn');
+  const importJsonBtn = document.getElementById('import-json-btn');
+  const importJsonInput = document.getElementById('import-json-input');
+  const dataBackupStatusEl = document.getElementById('data-backup-status');
+  const resetAllDataBtn = document.getElementById('reset-all-data-btn');
 
-  // Alt Navigasyon (Bottom Tab Bar) Elemanları
+  // Alt Navigasyon (5 Sekmeli Bottom Tab Bar)
   const bottomNavButtons = document.querySelectorAll('.bottom-nav-item');
   const tabPanels = {
     '7days': document.getElementById('tab-panel-7days'),
-    '30days': document.getElementById('tab-panel-30days'),
+    'calendar': document.getElementById('tab-panel-calendar'),
+    'progress': document.getElementById('tab-panel-progress'),
     'notes': document.getElementById('tab-panel-notes'),
     'quote': document.getElementById('tab-panel-quote')
   };
 
   // Sekme 1 ("7 Gün") Elemanları
-  const progressPercentEl = document.getElementById('progress-percent');
-  const progressCountEl = document.getElementById('progress-count');
-  const topStreakValueEl = document.getElementById('top-streak-value');
-  const bestRecordSubEl = document.getElementById('best-record-sub');
-  const weeklyTotalValueEl = document.getElementById('weekly-total-value');
-  const weeklyRangeSubEl = document.getElementById('weekly-range-sub');
-  const progressRatioBadgeEl = document.getElementById('progress-ratio-badge');
-  const progressFillEl = document.getElementById('progress-fill');
-  const progressBarContainer = document.getElementById('progress-bar-container');
-  const progressMessageEl = document.getElementById('progress-message');
-
   const habitForm = document.getElementById('habit-form');
   const habitTitleInput = document.getElementById('habit-title');
   const habitCategorySelect = document.getElementById('habit-category-select');
   const customCategoryWrapper = document.getElementById('custom-category-wrapper');
   const habitCategoryCustomInput = document.getElementById('habit-category-custom');
   const quickCategoryPills = document.querySelectorAll('.quick-cat-pill');
-
+  const todayTasksSectionEl = document.getElementById('today-tasks-section');
+  const todayTasksListEl = document.getElementById('today-tasks-list');
+  const goCalendarFromTasksBtn = document.getElementById('go-calendar-from-tasks-btn');
   const categoryFilterPillsEl = document.getElementById('category-filter-pills');
   const visibleHabitCountEl = document.getElementById('visible-habit-count');
+  const viewButtons = document.querySelectorAll('.view-btn');
   const weeklyBoardHeaderEl = document.getElementById('weekly-board-header');
   const habitListEl = document.getElementById('habit-list');
   const emptyStateEl = document.getElementById('empty-state');
@@ -104,15 +110,39 @@
   const emptyDescEl = document.getElementById('empty-desc');
   const emptySuggestionsEl = document.getElementById('empty-suggestions');
 
-  // Sekme 2 ("30 Gün") Elemanları
-  const monthlyDateRangeEl = document.getElementById('monthly-date-range');
-  const monthlyOverallPercentEl = document.getElementById('monthly-overall-percent');
-  const monthlyTotalChecksEl = document.getElementById('monthly-total-checks');
-  const monthlyBestHabitEl = document.getElementById('monthly-best-habit');
-  const monthlyHabitListEl = document.getElementById('monthly-habit-list');
-  const monthlyEmptyStateEl = document.getElementById('monthly-empty-state');
+  // Sekme 2 ("Takvim") Elemanları
+  const calendarMonthYearLabelEl = document.getElementById('calendar-month-year-label');
+  const calPrevMonthBtn = document.getElementById('cal-prev-month-btn');
+  const calNextMonthBtn = document.getElementById('cal-next-month-btn');
+  const calTodayBtn = document.getElementById('cal-today-btn');
+  const calendarDaysGridEl = document.getElementById('calendar-days-grid');
+  const dayDetailTitleEl = document.getElementById('day-detail-title');
+  const dayDetailSummaryBadgeEl = document.getElementById('day-detail-summary-badge');
+  const dayTaskForm = document.getElementById('day-task-form');
+  const dayTaskInput = document.getElementById('day-task-input');
+  const dayDetailTasksListEl = document.getElementById('day-detail-tasks-list');
+  const dayDetailFutureNoticeEl = document.getElementById('day-detail-future-notice');
+  const dayDetailHabitsListEl = document.getElementById('day-detail-habits-list');
 
-  // Sekme 3 ("Notlar") Elemanları
+  // Sekme 3 ("İlerleme") Elemanları
+  const progressRingCircleEl = document.getElementById('progress-ring-circle');
+  const progressPercentEl = document.getElementById('progress-percent');
+  const progressCountEl = document.getElementById('progress-count');
+  const progressRatioBadgeEl = document.getElementById('progress-ratio-badge');
+  const progressFillEl = document.getElementById('progress-fill');
+  const progressBarContainer = document.getElementById('progress-bar-container');
+  const progressMessageEl = document.getElementById('progress-message');
+  const resetDayBtn = document.getElementById('reset-day-btn');
+  const topStreakValueEl = document.getElementById('top-streak-value');
+  const bestRecordSubEl = document.getElementById('best-record-sub');
+  const weeklyTotalValueEl = document.getElementById('weekly-total-value');
+  const weeklyRangeSubEl = document.getElementById('weekly-range-sub');
+  const monthlyTotalValueEl = document.getElementById('monthly-total-value');
+  const monthlyNameSubEl = document.getElementById('monthly-name-sub');
+  const categoryBreakdownListEl = document.getElementById('category-breakdown-list');
+  const habitBreakdownListEl = document.getElementById('habit-breakdown-list');
+
+  // Sekme 4 ("Notlar") Elemanları
   const journalSelectedDateLabelEl = document.getElementById('journal-selected-date-label');
   const journalDateInput = document.getElementById('journal-date-input');
   const journalTodayBtn = document.getElementById('journal-today-btn');
@@ -125,7 +155,7 @@
   const notesHistoryCountEl = document.getElementById('notes-history-count');
   const notesHistoryListEl = document.getElementById('notes-history-list');
 
-  // Sekme 4 ("Günün Sözü") Elemanları
+  // Sekme 5 ("Söz") Elemanları
   const quoteDateBadgeEl = document.getElementById('quote-date-badge');
   const quoteTextEl = document.getElementById('quote-text');
   const quoteAuthorEl = document.getElementById('quote-author');
@@ -134,15 +164,10 @@
   const copyQuoteBtn = document.getElementById('copy-quote-btn');
   const copyQuoteLabelEl = document.getElementById('copy-quote-label');
 
-  // Veri Yedekleme & Geri Yükleme Elemanları
-  const exportJsonBtn = document.getElementById('export-json-btn');
-  const importJsonBtn = document.getElementById('import-json-btn');
-  const importJsonInput = document.getElementById('import-json-input');
-  const dataBackupStatusEl = document.getElementById('data-backup-status');
-
   // Uygulama Durumu (State)
   let habits = [];
-  let dailyNotes = {};
+  let dailyNotes = {}; // { "YYYY-MM-DD": "Not metni" }
+  let dailyTasks = {}; // { "YYYY-MM-DD": [ { id, title, completed, createdAt } ] }
   let activeCategoryFilter = 'all';
   let activeViewMode = localStorage.getItem(VIEW_MODE_KEY) === 'weekly' ? 'weekly' : 'daily';
   let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || '7days';
@@ -150,8 +175,14 @@
   let selectedNoteDateKey = '';
   let noteSaveTimer = null;
 
+  // Takvim Durumu
+  const initialNow = new Date();
+  let calendarViewYear = initialNow.getFullYear();
+  let calendarViewMonth = initialNow.getMonth(); // 0..11
+  let selectedCalendarDateKey = '';
+
   // ==========================================================================
-  // TARİH YARDIMCILARI (YYYY-MM-DD, 7 Gün ve Son 30 Gün)
+  // TARİH YARDIMCILARI
   // ==========================================================================
   function formatDateKey(dateObj) {
     const year = dateObj.getFullYear();
@@ -179,6 +210,7 @@
     const dt = parseDateKey(dateKey);
     const todayKey = getTodayKey();
     const yesterdayKey = addDaysToKey(todayKey, -1);
+    const tomorrowKey = addDaysToKey(todayKey, 1);
     const formatted = new Intl.DateTimeFormat('tr-TR', {
       weekday: 'long',
       day: 'numeric',
@@ -189,10 +221,10 @@
     const capitalized = formatted.charAt(0).toUpperCase() + formatted.slice(1);
     if (dateKey === todayKey) return `Bugün — ${capitalized}`;
     if (dateKey === yesterdayKey) return `Dün — ${capitalized}`;
+    if (dateKey === tomorrowKey) return `Yarın — ${capitalized}`;
     return capitalized;
   }
 
-  // İçinde bulunulan haftanın Pazartesi'den Pazar'a 7 gününü döndürür
   function getCurrentWeekDays() {
     const today = new Date();
     const todayKey = formatDateKey(today);
@@ -218,33 +250,21 @@
     return days;
   }
 
-  // Son 30 günü (29 gün önce -> bugün) sıralı döndürür
-  function getLast30Days() {
+  function getLast30DaysKeys() {
     const today = new Date();
-    const todayKey = formatDateKey(today);
-    const days = [];
-
+    const keys = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i, 12, 0, 0);
-      const key = formatDateKey(d);
-      const jsDay = d.getDay();
-      const shortIdx = jsDay === 0 ? 6 : jsDay - 1;
-      days.push({
-        key,
-        shortName: DAY_SHORT_NAMES[shortIdx],
-        dayNum: d.getDate(),
-        monthShort: new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(d),
-        isToday: key === todayKey
-      });
+      keys.push(formatDateKey(d));
     }
-    return days;
+    return keys;
   }
 
   // ==========================================================================
-  // ALT NAVİGASYON (BOTTOM TAB BAR) GEÇİŞ YÖNETİMİ
+  // 5 SEKMELİ ALT NAVİGASYON GEÇİŞ YÖNETİMİ
   // ==========================================================================
   function switchTab(tabName) {
-    const validTabs = ['7days', '30days', 'notes', 'quote'];
+    const validTabs = ['7days', 'calendar', 'progress', 'notes', 'quote'];
     const target = validTabs.includes(tabName) ? tabName : '7days';
     activeTab = target;
     localStorage.setItem(ACTIVE_TAB_KEY, target);
@@ -262,8 +282,13 @@
       panelEl.classList.toggle('active', isMatch);
     });
 
-    if (target === '30days') {
-      renderMonthly30DaysView();
+    if (target === '7days') {
+      renderHabits();
+    } else if (target === 'calendar') {
+      renderCalendarMonth();
+      renderCalendarDayDetail();
+    } else if (target === 'progress') {
+      renderProgressTab();
     } else if (target === 'notes') {
       renderJournalSection();
     } else if (target === 'quote') {
@@ -342,6 +367,12 @@
     return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
   }
 
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
   // Tema Yükleme ve Değiştirme
   function loadTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
@@ -366,7 +397,6 @@
     });
   }
 
-  // 7 Gün Sekmesi Görünüm Modu (Kartlar / Tablo)
   function applyViewMode(viewMode) {
     activeViewMode = viewMode === 'weekly' ? 'weekly' : 'daily';
     localStorage.setItem(VIEW_MODE_KEY, activeViewMode);
@@ -393,7 +423,7 @@
   }
 
   // ==========================================================================
-  // VERİ YÜKLEME VE GERİYE DÖNÜK UYUMLULUK
+  // VERİ YÜKLEME VE KAYDETME (Alışkanlıklar, Görevler, Notlar)
   // ==========================================================================
   function normalizeHabitList(rawList) {
     const todayKey = getTodayKey();
@@ -458,74 +488,141 @@
     }
   }
 
-  function escapeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  function loadDailyTasks() {
+    try {
+      const raw = localStorage.getItem(TASKS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      dailyTasks = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch (err) {
+      console.error('Günlük görevler okunamadı:', err);
+      dailyTasks = {};
+    }
+  }
+
+  function saveDailyTasks() {
+    try {
+      localStorage.setItem(TASKS_KEY, JSON.stringify(dailyTasks));
+    } catch (err) {
+      console.error('Günlük görevler kaydedilemedi:', err);
+    }
+  }
+
+  function getTasksForDate(dateKey) {
+    return Array.isArray(dailyTasks[dateKey]) ? dailyTasks[dateKey] : [];
+  }
+
+  function addDailyTask(dateKey, title) {
+    const cleanTitle = title.trim();
+    if (!cleanTitle || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+
+    if (!Array.isArray(dailyTasks[dateKey])) {
+      dailyTasks[dateKey] = [];
+    }
+
+    dailyTasks[dateKey].push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      title: cleanTitle,
+      completed: false,
+      createdAt: new Date().toISOString()
+    });
+
+    saveDailyTasks();
+    renderTodaySpecialTasksOn7Days();
+    if (activeTab === 'calendar') {
+      renderCalendarMonth();
+      renderCalendarDayDetail();
+    }
+  }
+
+  function toggleDailyTask(dateKey, taskId) {
+    const list = getTasksForDate(dateKey);
+    const task = list.find((t) => t.id === taskId);
+    if (!task) return;
+    task.completed = !task.completed;
+    saveDailyTasks();
+    renderTodaySpecialTasksOn7Days();
+    if (activeTab === 'calendar') {
+      renderCalendarMonth();
+      renderCalendarDayDetail();
+    }
+  }
+
+  function deleteDailyTask(dateKey, taskId) {
+    if (!Array.isArray(dailyTasks[dateKey])) return;
+    dailyTasks[dateKey] = dailyTasks[dateKey].filter((t) => t.id !== taskId);
+    if (dailyTasks[dateKey].length === 0) {
+      delete dailyTasks[dateKey];
+    }
+    saveDailyTasks();
+    renderTodaySpecialTasksOn7Days();
+    if (activeTab === 'calendar') {
+      renderCalendarMonth();
+      renderCalendarDayDetail();
+    }
   }
 
   // ==========================================================================
-  // SEKME 1 ("7 GÜN") — İSTATİSTİKLER VE HAFTALIK TAKİP
+  // SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI
   // ==========================================================================
-  function updateStatsAndProgress() {
+  function renderTodaySpecialTasksOn7Days() {
     const todayKey = getTodayKey();
-    const total = habits.length;
-    const completedTodayCount = habits.filter((h) => isCompletedOnDate(h, todayKey)).length;
-    const percent = total === 0 ? 0 : Math.round((completedTodayCount / total) * 100);
+    const todayTasks = getTasksForDate(todayKey);
 
-    progressPercentEl.textContent = `${percent}%`;
-    progressCountEl.textContent = `${completedTodayCount} / ${total}`;
-    progressRatioBadgeEl.textContent = `${completedTodayCount} / ${total} tamamlandı`;
-    progressFillEl.style.width = `${percent}%`;
-    progressBarContainer.setAttribute('aria-valuenow', String(percent));
-
-    const isAllDone = total > 0 && completedTodayCount === total;
-    progressPercentEl.classList.toggle('all-done', isAllDone);
-    progressFillEl.classList.toggle('all-done', isAllDone);
-
-    let topActiveStreak = 0;
-    let topBestRecord = 0;
-
-    habits.forEach((habit) => {
-      const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
-      if (currentStreak > topActiveStreak) topActiveStreak = currentStreak;
-      if (bestStreak > topBestRecord) topBestRecord = bestStreak;
-    });
-
-    topStreakValueEl.textContent = `🔥 ${topActiveStreak} gün`;
-    bestRecordSubEl.textContent = `Rekor: ${topBestRecord} gün`;
-
-    const weekDays = getCurrentWeekDays();
-    const weekKeySet = new Set(weekDays.map((d) => d.key));
-    let weeklyCompletions = 0;
-
-    habits.forEach((habit) => {
-      if (Array.isArray(habit.completedDates)) {
-        habit.completedDates.forEach((dKey) => {
-          if (weekKeySet.has(dKey)) weeklyCompletions++;
-        });
-      }
-    });
-
-    const firstDay = weekDays[0];
-    const lastDay = weekDays[6];
-    weeklyTotalValueEl.textContent = `${weeklyCompletions} kez`;
-    weeklyRangeSubEl.textContent = `${firstDay.dayNum} ${firstDay.monthShort} - ${lastDay.dayNum} ${lastDay.monthShort}`;
-
-    if (total === 0) {
-      progressMessageEl.textContent = 'Takip etmek için ilk alışkanlığını ekle.';
-    } else if (percent === 0) {
-      progressMessageEl.textContent =
-        topActiveStreak > 0
-          ? `🔥 ${topActiveStreak} günlük aktif serini korumak için bugünkü hedeflerini işaretle!`
-          : 'Yeni bir güne harika bir başlangıç yap!';
-    } else if (percent < 50) {
-      progressMessageEl.textContent = 'Güzel başladın, serini güçlendirmeye devam et!';
-    } else if (percent < 100) {
-      progressMessageEl.textContent = 'Yarıyı geçtin, bugünü eksiksiz tamamlamaya çok az kaldı!';
-    } else {
-      progressMessageEl.textContent = 'Harika! Bugünkü tüm alışkanlıklarını tamamladın ve serini korudun.';
+    if (todayTasks.length === 0) {
+      todayTasksSectionEl.hidden = true;
+      todayTasksListEl.innerHTML = '';
+      return;
     }
+
+    todayTasksSectionEl.hidden = false;
+    todayTasksListEl.innerHTML = '';
+
+    todayTasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.className = `habit-item${task.completed ? ' completed' : ''}`;
+      li.innerHTML = `
+        <div class="habit-main-row">
+          <label class="habit-label">
+            <input
+              type="checkbox"
+              class="habit-checkbox today-task-checkbox"
+              data-task-id="${task.id}"
+              data-task-date="${todayKey}"
+              ${task.completed ? 'checked' : ''}
+            />
+            <span class="custom-checkbox" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <div class="habit-content">
+              <div class="habit-title-wrapper">
+                <span class="habit-title">${escapeHTML(task.title)}</span>
+              </div>
+              <div class="habit-meta">
+                <span class="daily-task-tag">📌 Günlük Görev</span>
+              </div>
+            </div>
+          </label>
+          <div class="habit-actions">
+            <button
+              type="button"
+              class="icon-btn delete-btn today-task-delete-btn"
+              data-task-id="${task.id}"
+              data-task-date="${todayKey}"
+              title="Görevi sil"
+              aria-label="${escapeHTML(task.title)} görevini sil"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+      todayTasksListEl.appendChild(li);
+    });
   }
 
   function renderCategoryFilterPills() {
@@ -787,6 +884,7 @@
   }
 
   function renderHabits() {
+    renderTodaySpecialTasksOn7Days();
     renderCategoryFilterPills();
     const weekDays = getCurrentWeekDays();
 
@@ -839,12 +937,6 @@
       });
     }
 
-    updateStatsAndProgress();
-
-    if (activeTab === '30days') {
-      renderMonthly30DaysView();
-    }
-
     if (editingHabitId) {
       const editInput = habitListEl.querySelector('.habit-edit-title');
       if (editInput) {
@@ -855,126 +947,357 @@
   }
 
   // ==========================================================================
-  // SEKME 2 ("30 GÜN") — SON 30 GÜNLÜK PERFORMANS VE ETKİLEŞİMLİ IZGARA
+  // SEKME 2: YILLIK "TAKVİM" SEKMESİ (AY AY İLERLEMELİ & GÖREV EKLEMELİ)
   // ==========================================================================
-  function renderMonthly30DaysView() {
-    const days30 = getLast30Days();
-    const firstDay = days30[0];
-    const lastDay = days30[days30.length - 1];
-    monthlyDateRangeEl.textContent = `${firstDay.dayNum} ${firstDay.monthShort} — ${lastDay.dayNum} ${lastDay.monthShort} (Son 30 Gün)`;
-
-    monthlyHabitListEl.innerHTML = '';
-
-    if (habits.length === 0) {
-      monthlyEmptyStateEl.hidden = false;
-      monthlyOverallPercentEl.textContent = '0%';
-      monthlyTotalChecksEl.textContent = '0 tamamlama';
-      monthlyBestHabitEl.textContent = '—';
-      return;
+  function renderCalendarMonth() {
+    if (!selectedCalendarDateKey) {
+      selectedCalendarDateKey = getTodayKey();
     }
 
-    monthlyEmptyStateEl.hidden = true;
+    const todayKey = getTodayKey();
+    const monthStart = new Date(calendarViewYear, calendarViewMonth, 1, 12, 0, 0);
+    const monthTitle = new Intl.DateTimeFormat('tr-TR', {
+      month: 'long',
+      year: 'numeric'
+    }).format(monthStart);
 
-    const days30KeySet = new Set(days30.map((d) => d.key));
-    let totalChecksIn30Days = 0;
-    let bestHabitTitle = '—';
-    let bestHabitCount = -1;
+    calendarMonthYearLabelEl.textContent = monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1);
 
-    habits.forEach((habit) => {
-      let completedIn30 = 0;
-      if (Array.isArray(habit.completedDates)) {
-        habit.completedDates.forEach((dKey) => {
-          if (days30KeySet.has(dKey)) completedIn30++;
-        });
+    // Pazartesi tabanlı başlangıç ofseti (0: Pzt, ..., 6: Paz)
+    const startJsDay = monthStart.getDay();
+    const startOffset = startJsDay === 0 ? 6 : startJsDay - 1;
+    const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+
+    // Toplam hücre sayısı (35 veya 42)
+    const totalCells = startOffset + daysInMonth > 35 ? 42 : 35;
+    const firstGridDate = new Date(calendarViewYear, calendarViewMonth, 1 - startOffset, 12, 0, 0);
+
+    calendarDaysGridEl.innerHTML = '';
+
+    for (let i = 0; i < totalCells; i++) {
+      const cellDate = new Date(firstGridDate);
+      cellDate.setDate(firstGridDate.getDate() + i);
+      const dateKey = formatDateKey(cellDate);
+      const isCurrentMonth = cellDate.getMonth() === calendarViewMonth;
+      const isToday = dateKey === todayKey;
+      const isSelected = dateKey === selectedCalendarDateKey;
+
+      const completedHabitsCount = habits.filter((h) => isCompletedOnDate(h, dateKey)).length;
+      const tasksOnDay = getTasksForDate(dateKey);
+      const hasNoteOnDay = Boolean(dailyNotes[dateKey] && dailyNotes[dateKey].trim());
+      const allHabitsDone = habits.length > 0 && completedHabitsCount === habits.length;
+
+      const cellBtn = document.createElement('button');
+      cellBtn.type = 'button';
+      cellBtn.className = [
+        'cal-day-cell',
+        !isCurrentMonth ? 'is-outside' : '',
+        isToday ? 'is-today' : '',
+        isSelected ? 'is-selected' : '',
+        allHabitsDone ? 'all-habits-done' : ''
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      cellBtn.dataset.calDate = dateKey;
+      cellBtn.setAttribute('aria-label', `${formatHumanDateLabel(dateKey)}`);
+
+      let indicatorsHTML = '';
+      if (completedHabitsCount > 0) {
+        indicatorsHTML += `<span class="cal-ind-dot dot-habit-done" title="${completedHabitsCount} alışkanlık tamamlandı"></span>`;
+      }
+      if (tasksOnDay.length > 0) {
+        indicatorsHTML += `<span class="cal-ind-dot dot-task-planned" title="${tasksOnDay.length} özel görev"></span>`;
+      }
+      if (hasNoteOnDay) {
+        indicatorsHTML += `<span class="cal-ind-dot dot-note-saved" title="Günlük not var"></span>`;
       }
 
-      totalChecksIn30Days += completedIn30;
-      if (completedIn30 > bestHabitCount && completedIn30 > 0) {
-        bestHabitCount = completedIn30;
-        bestHabitTitle = `${habit.title} (${Math.round((completedIn30 / 30) * 100)}%)`;
-      }
-
-      const habitPercent = Math.round((completedIn30 / 30) * 100);
-      const isHighRate = habitPercent >= 70;
-      const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
-      const color = habit.color || getCategoryColor(habit.category);
-
-      const categoryBadge = habit.category
-        ? `<span class="category-tag" data-color="${color}">
-             <span class="cat-dot"></span>
-             ${escapeHTML(habit.category)}
-           </span>`
-        : '';
-
-      const gridCellsHTML = days30
-        .map((d) => {
-          const done = isCompletedOnDate(habit, d.key);
-          const classes = [
-            'month-day-cell',
-            done ? 'is-done' : '',
-            d.isToday ? 'is-today' : ''
-          ]
-            .filter(Boolean)
-            .join(' ');
-
-          const tooltip = `${d.dayNum} ${d.monthShort} (${d.shortName}) — ${done ? 'Tamamlandı (Geri almak için tıkla)' : 'Tamamlandı olarak işaretle'}`;
-          return `
-            <button
-              type="button"
-              class="${classes}"
-              data-month-habit-id="${habit.id}"
-              data-month-date-key="${d.key}"
-              title="${tooltip}"
-              aria-label="${tooltip}"
-              aria-pressed="${done}"
-            >
-              <span class="m-day-num">${done ? '✓' : d.dayNum}</span>
-              <span class="m-day-mon">${d.monthShort}</span>
-            </button>
-          `;
-        })
-        .join('');
-
-      const card = document.createElement('div');
-      card.className = 'card monthly-habit-card';
-      card.innerHTML = `
-        <div class="monthly-habit-header">
-          <div class="monthly-habit-title-wrap">
-            <span class="monthly-habit-title">${escapeHTML(habit.title)}</span>
-            <div class="habit-meta">
-              ${categoryBadge}
-              <span class="streak-badge${currentStreak > 0 ? ' has-streak' : ''}">
-                🔥 ${currentStreak} gün <span class="streak-best">(Rekor: ${bestStreak})</span>
-              </span>
-            </div>
-          </div>
-          <div class="monthly-habit-stats">
-            <span class="monthly-rate-pill${isHighRate ? ' high-rate' : ''}">
-              ${habitPercent}% (${completedIn30}/30 gün)
-            </span>
-          </div>
-        </div>
-        <div class="monthly-rate-bar" aria-hidden="true">
-          <div class="monthly-rate-fill${isHighRate ? ' high-rate' : ''}" style="width: ${habitPercent}%"></div>
-        </div>
-        <div class="monthly-grid-30" role="group" aria-label="${escapeHTML(habit.title)} son 30 gün ızgarası">
-          ${gridCellsHTML}
-        </div>
+      cellBtn.innerHTML = `
+        <span class="cal-day-num">${cellDate.getDate()}</span>
+        <div class="cal-day-indicators">${indicatorsHTML}</div>
       `;
 
-      monthlyHabitListEl.appendChild(card);
-    });
+      calendarDaysGridEl.appendChild(cellBtn);
+    }
+  }
 
-    const maxPossible = habits.length * 30;
-    const overallPercent = maxPossible === 0 ? 0 : Math.round((totalChecksIn30Days / maxPossible) * 100);
+  function renderCalendarDayDetail() {
+    if (!selectedCalendarDateKey) {
+      selectedCalendarDateKey = getTodayKey();
+    }
 
-    monthlyOverallPercentEl.textContent = `${overallPercent}%`;
-    monthlyTotalChecksEl.textContent = `${totalChecksIn30Days} / ${maxPossible} gün`;
-    monthlyBestHabitEl.textContent = bestHabitTitle;
+    const todayKey = getTodayKey();
+    const isFutureDay = selectedCalendarDateKey > todayKey;
+    const tasksOnDay = getTasksForDate(selectedCalendarDateKey);
+    const completedHabitsOnDay = habits.filter((h) => isCompletedOnDate(h, selectedCalendarDateKey)).length;
+
+    dayDetailTitleEl.textContent = formatHumanDateLabel(selectedCalendarDateKey);
+    dayDetailSummaryBadgeEl.textContent = `${tasksOnDay.length} görev • ${completedHabitsOnDay}/${habits.length} alışkanlık`;
+    dayDetailFutureNoticeEl.hidden = !isFutureDay;
+
+    // A) Seçili Güne Özel Görevler Listesi
+    dayDetailTasksListEl.innerHTML = '';
+    if (tasksOnDay.length === 0) {
+      dayDetailTasksListEl.innerHTML = `<li class="day-detail-empty">Bu güne planlanmış özel bir görev yok. Yukarıdaki kutudan ekleyebilirsiniz.</li>`;
+    } else {
+      tasksOnDay.forEach((task) => {
+        const li = document.createElement('li');
+        li.className = `day-detail-item${task.completed ? ' completed' : ''}`;
+        li.innerHTML = `
+          <label class="habit-label">
+            <input
+              type="checkbox"
+              class="habit-checkbox cal-task-checkbox"
+              data-task-id="${task.id}"
+              data-task-date="${selectedCalendarDateKey}"
+              ${task.completed ? 'checked' : ''}
+            />
+            <span class="custom-checkbox" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <div class="habit-content">
+              <div class="habit-title-wrapper">
+                <span class="habit-title">${escapeHTML(task.title)}</span>
+              </div>
+            </div>
+          </label>
+          <button
+            type="button"
+            class="icon-btn delete-btn cal-task-delete-btn"
+            data-task-id="${task.id}"
+            data-task-date="${selectedCalendarDateKey}"
+            title="Görevi sil"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        `;
+        dayDetailTasksListEl.appendChild(li);
+      });
+    }
+
+    // B) O Güne Ait Günlük Alışkanlıklar Listesi
+    dayDetailHabitsListEl.innerHTML = '';
+    if (habits.length === 0) {
+      dayDetailHabitsListEl.innerHTML = `<li class="day-detail-empty">Henüz tanımlı bir alışkanlık yok. "7 Gün" sekmesinden alışkanlık ekleyebilirsiniz.</li>`;
+    } else {
+      habits.forEach((habit) => {
+        const done = isCompletedOnDate(habit, selectedCalendarDateKey);
+        const color = habit.color || getCategoryColor(habit.category);
+        const categoryBadge = habit.category
+          ? `<span class="category-tag" data-color="${color}"><span class="cat-dot"></span>${escapeHTML(habit.category)}</span>`
+          : '';
+
+        const li = document.createElement('li');
+        li.className = `day-detail-item${done ? ' completed' : ''}`;
+        li.innerHTML = `
+          <label class="habit-label">
+            <input
+              type="checkbox"
+              class="habit-checkbox cal-habit-checkbox"
+              data-habit-id="${habit.id}"
+              data-date-key="${selectedCalendarDateKey}"
+              ${done ? 'checked' : ''}
+              ${isFutureDay ? 'disabled' : ''}
+            />
+            <span class="custom-checkbox" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <div class="habit-content">
+              <div class="habit-title-wrapper">
+                <span class="habit-title">${escapeHTML(habit.title)}</span>
+              </div>
+            </div>
+          </label>
+          ${categoryBadge}
+        `;
+        dayDetailHabitsListEl.appendChild(li);
+      });
+    }
   }
 
   // ==========================================================================
-  // SEKME 3 ("NOTLAR") — GÜNLÜK YANSIMA VE GEÇMİŞ NOTLAR LİSTESİ
+  // SEKME 3: AYRI "İLERLEME" SEKMESİ (TÜM İSTATİSTİKLER & ANALİZLER)
+  // ==========================================================================
+  function renderProgressTab() {
+    const todayKey = getTodayKey();
+    const total = habits.length;
+    const completedTodayCount = habits.filter((h) => isCompletedOnDate(h, todayKey)).length;
+    const percent = total === 0 ? 0 : Math.round((completedTodayCount / total) * 100);
+
+    // Dairesel Halka ve Yatay Çubuk
+    const offset = RING_CIRCUMFERENCE - (percent / 100) * RING_CIRCUMFERENCE;
+    if (progressRingCircleEl) {
+      progressRingCircleEl.style.strokeDashoffset = String(offset);
+      progressRingCircleEl.classList.toggle('all-done', total > 0 && completedTodayCount === total);
+    }
+
+    progressPercentEl.textContent = `${percent}%`;
+    progressCountEl.textContent = `Bugün ${completedTodayCount} / ${total} alışkanlık tamamlandı`;
+    progressRatioBadgeEl.textContent = `${completedTodayCount} / ${total} tamamlandı`;
+    progressFillEl.style.width = `${percent}%`;
+    progressBarContainer.setAttribute('aria-valuenow', String(percent));
+
+    const isAllDone = total > 0 && completedTodayCount === total;
+    progressPercentEl.classList.toggle('all-done', isAllDone);
+    progressFillEl.classList.toggle('all-done', isAllDone);
+
+    // En Yüksek Aktif Seri ve Tüm Zamanların Rekoru
+    let topActiveStreak = 0;
+    let topBestRecord = 0;
+
+    habits.forEach((habit) => {
+      const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
+      if (currentStreak > topActiveStreak) topActiveStreak = currentStreak;
+      if (bestStreak > topBestRecord) topBestRecord = bestStreak;
+    });
+
+    topStreakValueEl.textContent = `🔥 ${topActiveStreak} gün`;
+    bestRecordSubEl.textContent = `🏆 ${topBestRecord} gün`;
+
+    // Bu Haftaki Toplam Tamamlama
+    const weekDays = getCurrentWeekDays();
+    const weekKeySet = new Set(weekDays.map((d) => d.key));
+    let weeklyCompletions = 0;
+
+    // Bu Ayki Toplam Tamamlama
+    const now = new Date();
+    const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-`;
+    let monthlyCompletions = 0;
+
+    habits.forEach((habit) => {
+      if (Array.isArray(habit.completedDates)) {
+        habit.completedDates.forEach((dKey) => {
+          if (weekKeySet.has(dKey)) weeklyCompletions++;
+          if (dKey.startsWith(currentMonthPrefix)) monthlyCompletions++;
+        });
+      }
+    });
+
+    const firstDay = weekDays[0];
+    const lastDay = weekDays[6];
+    weeklyTotalValueEl.textContent = `${weeklyCompletions} kez`;
+    weeklyRangeSubEl.textContent = `${firstDay.dayNum} ${firstDay.monthShort} - ${lastDay.dayNum} ${lastDay.monthShort}`;
+
+    const monthName = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).format(now);
+    monthlyTotalValueEl.textContent = `${monthlyCompletions} kez`;
+    monthlyNameSubEl.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+    // Motivasyon Mesajı
+    if (total === 0) {
+      progressMessageEl.textContent = 'İstatistikleri görmek için "7 Gün" sekmesinden ilk alışkanlığını ekle.';
+    } else if (percent === 0) {
+      progressMessageEl.textContent =
+        topActiveStreak > 0
+          ? `🔥 ${topActiveStreak} günlük aktif serini korumak için bugünkü hedeflerini işaretle!`
+          : 'Yeni bir güne harika bir başlangıç yap!';
+    } else if (percent < 50) {
+      progressMessageEl.textContent = 'Güzel başladın, serini güçlendirmeye devam et!';
+    } else if (percent < 100) {
+      progressMessageEl.textContent = 'Yarıyı geçtin, bugünü eksiksiz tamamlamaya çok az kaldı!';
+    } else {
+      progressMessageEl.textContent = 'Harika! Bugünkü tüm alışkanlıklarını tamamladın ve serini korudun.';
+    }
+
+    // Son 30 Gün Anahtarları
+    const last30KeysSet = new Set(getLast30DaysKeys());
+
+    // Kategori Bazlı Başarı Yüzdeleri
+    categoryBreakdownListEl.innerHTML = '';
+    if (habits.length === 0) {
+      categoryBreakdownListEl.innerHTML = `<p class="day-detail-empty">Henüz alışkanlık verisi bulunmuyor.</p>`;
+    } else {
+      const catStats = new Map();
+      habits.forEach((habit) => {
+        const catName = habit.category || 'Kategorisiz';
+        if (!catStats.has(catName)) {
+          catStats.set(catName, { count: 0, checks30: 0 });
+        }
+        const entry = catStats.get(catName);
+        entry.count++;
+        if (Array.isArray(habit.completedDates)) {
+          habit.completedDates.forEach((dKey) => {
+            if (last30KeysSet.has(dKey)) entry.checks30++;
+          });
+        }
+      });
+
+      catStats.forEach((val, catName) => {
+        const possible = val.count * 30;
+        const rate = possible === 0 ? 0 : Math.round((val.checks30 / possible) * 100);
+        const color = getCategoryColor(catName);
+        const div = document.createElement('div');
+        div.className = 'breakdown-item';
+        div.innerHTML = `
+          <div class="breakdown-item-top">
+            <div class="breakdown-item-title">
+              <span class="category-tag" data-color="${color}"><span class="cat-dot"></span>${escapeHTML(catName)}</span>
+              <span class="stat-sub">(${val.count} alışkanlık)</span>
+            </div>
+            <div class="breakdown-item-meta">
+              <span>${rate}%</span>
+              <span class="stat-sub">(${val.checks30}/${possible} gün)</span>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill${rate >= 70 ? ' all-done' : ''}" style="width: ${rate}%"></div>
+          </div>
+        `;
+        categoryBreakdownListEl.appendChild(div);
+      });
+    }
+
+    // Alışkanlık Bazlı Tekil Başarı Yüzdeleri Listesi
+    habitBreakdownListEl.innerHTML = '';
+    if (habits.length === 0) {
+      habitBreakdownListEl.innerHTML = `<p class="day-detail-empty">Henüz alışkanlık eklenmedi.</p>`;
+    } else {
+      habits.forEach((habit) => {
+        let checks30 = 0;
+        if (Array.isArray(habit.completedDates)) {
+          habit.completedDates.forEach((dKey) => {
+            if (last30KeysSet.has(dKey)) checks30++;
+          });
+        }
+        const rate30 = Math.round((checks30 / 30) * 100);
+        const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
+        const color = habit.color || getCategoryColor(habit.category);
+        const categoryBadge = habit.category
+          ? `<span class="category-tag" data-color="${color}"><span class="cat-dot"></span>${escapeHTML(habit.category)}</span>`
+          : '';
+
+        const div = document.createElement('div');
+        div.className = 'breakdown-item';
+        div.innerHTML = `
+          <div class="breakdown-item-top">
+            <div class="breakdown-item-title">
+              <span>${escapeHTML(habit.title)}</span>
+              ${categoryBadge}
+            </div>
+            <div class="breakdown-item-meta">
+              <span>🔥 ${currentStreak}g (En iyi: ${bestStreak}g)</span>
+              <span>•</span>
+              <span>${rate30}% (${checks30}/30g)</span>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill${rate30 >= 70 ? ' all-done' : ''}" style="width: ${rate30}%"></div>
+          </div>
+        `;
+        habitBreakdownListEl.appendChild(div);
+      });
+    }
+  }
+
+  // ==========================================================================
+  // SEKME 4 ("NOTLAR") — GÜNLÜK YANSIMA VE GEÇMİŞ NOTLAR LİSTESİ
   // ==========================================================================
   function loadNotes() {
     try {
@@ -1122,7 +1445,7 @@
   }
 
   // ==========================================================================
-  // SEKME 4 ("GÜNÜN SÖZÜ") — API + LOCALSTORAGE + 28 TÜRKÇE YEDEK SÖZ
+  // SEKME 5 ("SÖZ") — API + LOCALSTORAGE + 28 TÜRKÇE YEDEK SÖZ
   // ==========================================================================
   function getDeterministicFallbackQuote(dateKey, forceRandom = false) {
     if (forceRandom) {
@@ -1170,7 +1493,6 @@
       }
     }
 
-    // Yüklenirken önce çevrimdışı yedeği hazır tut, API yanıt verirse güncelle
     newQuoteBtn.disabled = true;
 
     try {
@@ -1200,7 +1522,6 @@
       }
       throw new Error('Geçersiz söz verisi');
     } catch (err) {
-      // Çevrimdışıysa veya API erişilemezse gömülü 28 Türkçe sözden göster
       const fallback = getDeterministicFallbackQuote(todayKey, forceNew);
       const payload = {
         date: todayKey,
@@ -1288,13 +1609,11 @@
     }
 
     saveHabits();
-    selectJournalDate(dateKey);
 
     if (animateIfToday && dateKey === todayKey && activeViewMode === 'daily' && activeTab === '7days') {
       const itemEl = habitListEl.querySelector(`.habit-item[data-id="${id}"]`);
       if (itemEl) {
         itemEl.classList.toggle('completed', isCompletedToday(habit));
-        updateStatsAndProgress();
         setTimeout(() => {
           renderHabits();
         }, 280);
@@ -1303,6 +1622,12 @@
     }
 
     renderHabits();
+    if (activeTab === 'calendar') {
+      renderCalendarMonth();
+      renderCalendarDayDetail();
+    } else if (activeTab === 'progress') {
+      renderProgressTab();
+    }
   }
 
   function saveEditedHabit(id, newTitle, newCategory) {
@@ -1342,6 +1667,7 @@
     });
     saveHabits();
     renderHabits();
+    renderProgressTab();
   }
 
   function syncCategorySelectionUI(selectedValue) {
@@ -1358,8 +1684,58 @@
   }
 
   // ==========================================================================
-  // JSON VERİ YEDEKLEME (EXPORT) VE GERİ YÜKLEME (IMPORT)
+  // AYARLAR MODALI ("GÖRÜNÜM" & "VERİ VE DEPOLAMA")
   // ==========================================================================
+  function updateStorageUsageStats() {
+    let totalBytes = 0;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const val = localStorage.getItem(key) || '';
+          totalBytes += (key.length + val.length) * 2;
+        }
+      }
+    } catch (e) {
+      totalBytes = 0;
+    }
+
+    const kb = (totalBytes / 1024).toFixed(2);
+    storageUsageTextEl.textContent = `${kb} KB`;
+
+    let totalTaskCount = 0;
+    Object.values(dailyTasks).forEach((arr) => {
+      if (Array.isArray(arr)) totalTaskCount += arr.length;
+    });
+    const noteCount = Object.keys(dailyNotes).filter((k) => dailyNotes[k] && dailyNotes[k].trim()).length;
+
+    storageCountsTextEl.textContent = `${habits.length} alışkanlık • ${totalTaskCount} özel görev • ${noteCount} günlük not`;
+  }
+
+  function openSettingsModal() {
+    updateStorageUsageStats();
+    settingsModalBackdrop.hidden = false;
+  }
+
+  function closeSettingsModal() {
+    settingsModalBackdrop.hidden = true;
+  }
+
+  function switchSettingsTab(tabKey) {
+    const isStorage = tabKey === 'storage';
+    modalTabButtons.forEach((btn) => {
+      const active = btn.dataset.settingsTab === tabKey;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', String(active));
+    });
+
+    settingsPaneAppearance.hidden = isStorage;
+    settingsPaneStorage.hidden = !isStorage;
+    if (isStorage) {
+      updateStorageUsageStats();
+    }
+  }
+
   function showBackupFeedback(message, isError = false) {
     dataBackupStatusEl.textContent = message;
     dataBackupStatusEl.classList.toggle('status-ok', !isError);
@@ -1367,8 +1743,7 @@
 
     setTimeout(() => {
       dataBackupStatusEl.classList.remove('status-ok', 'status-err');
-      dataBackupStatusEl.textContent =
-        'Verileriniz cihazınızda güvenle saklanır. JSON olarak yedekleyebilir veya geri yükleyebilirsiniz.';
+      dataBackupStatusEl.textContent = '';
     }, 4500);
   }
 
@@ -1377,11 +1752,12 @@
       const todayKey = getTodayKey();
       const backupPayload = {
         app: 'Olimpya',
-        version: 5,
+        version: 6,
         exportedAt: new Date().toISOString(),
         theme: localStorage.getItem(THEME_KEY) || 'light',
         viewMode: activeViewMode,
         habits,
+        tasks: dailyTasks,
         notes: dailyNotes
       };
 
@@ -1414,6 +1790,7 @@
 
         let incomingHabits = null;
         let incomingNotes = {};
+        let incomingTasks = {};
         let incomingTheme = null;
         let incomingViewMode = null;
 
@@ -1423,6 +1800,9 @@
           incomingHabits = parsed.habits;
           if (parsed.notes && typeof parsed.notes === 'object' && !Array.isArray(parsed.notes)) {
             incomingNotes = parsed.notes;
+          }
+          if (parsed.tasks && typeof parsed.tasks === 'object' && !Array.isArray(parsed.tasks)) {
+            incomingTasks = parsed.tasks;
           }
           if (typeof parsed.theme === 'string') {
             incomingTheme = parsed.theme;
@@ -1451,20 +1831,25 @@
 
         habits = normalizedHabits;
         dailyNotes = incomingNotes;
+        dailyTasks = incomingTasks;
         saveHabits();
         saveNotesToStorage();
+        saveDailyTasks();
 
         if (incomingTheme) {
           applyTheme(incomingTheme);
         }
         if (incomingViewMode) {
           applyViewMode(incomingViewMode);
-        } else {
-          renderHabits();
         }
 
-        renderMonthly30DaysView();
+        renderHabits();
+        renderCalendarMonth();
+        renderCalendarDayDetail();
+        renderProgressTab();
         renderJournalSection();
+        updateStorageUsageStats();
+
         showBackupFeedback(
           `✓ Yedek başarıyla geri yüklendi (${habits.length} alışkanlık, ${noteCount} not).`,
           false
@@ -1483,6 +1868,33 @@
     };
 
     reader.readAsText(file, 'utf-8');
+  }
+
+  function resetAllUserDataWithDoubleConfirm() {
+    const firstConfirm = window.confirm(
+      'DİKKAT: Tüm alışkanlıklarınız, seri geçmişiniz, takvim görevleriniz ve günlük notlarınız silinecek.\n\nDevam etmek istiyor musunuz?'
+    );
+    if (!firstConfirm) return;
+
+    const secondConfirm = window.confirm(
+      'SON ONAY: Bu işlem geri alınamaz. Tüm verileri kalıcı olarak sıfırlamak istediğinize emin misiniz?'
+    );
+    if (!secondConfirm) return;
+
+    habits = [];
+    dailyNotes = {};
+    dailyTasks = {};
+    saveHabits();
+    saveNotesToStorage();
+    saveDailyTasks();
+
+    renderHabits();
+    renderCalendarMonth();
+    renderCalendarDayDetail();
+    renderProgressTab();
+    renderJournalSection();
+    updateStorageUsageStats();
+    showBackupFeedback('✓ Tüm veriler sıfırlandı.', false);
   }
 
   // ==========================================================================
@@ -1507,12 +1919,50 @@
     });
   });
 
+  // Ayarlar Modalı Dinleyicileri
+  openSettingsBtn.addEventListener('click', openSettingsModal);
+  closeSettingsBtn.addEventListener('click', closeSettingsModal);
+
+  settingsModalBackdrop.addEventListener('click', (e) => {
+    if (e.target === settingsModalBackdrop) {
+      closeSettingsModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !settingsModalBackdrop.hidden) {
+      closeSettingsModal();
+    }
+  });
+
+  modalTabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      switchSettingsTab(btn.dataset.settingsTab);
+    });
+  });
+
   themeButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       applyTheme(btn.dataset.themeValue);
     });
   });
 
+  exportJsonBtn.addEventListener('click', exportBackupToJson);
+
+  importJsonBtn.addEventListener('click', () => {
+    importJsonInput.click();
+  });
+
+  importJsonInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      importBackupFromJsonFile(file);
+    }
+  });
+
+  resetAllDataBtn.addEventListener('click', resetAllUserDataWithDoubleConfirm);
+
+  // Sekme 1 ("7 Gün") Dinleyicileri
   viewButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       applyViewMode(btn.dataset.view);
@@ -1536,6 +1986,24 @@
     habitTitleInput.value = '';
     habitCategoryCustomInput.value = '';
     habitTitleInput.focus();
+  });
+
+  goCalendarFromTasksBtn.addEventListener('click', () => {
+    selectedCalendarDateKey = getTodayKey();
+    switchTab('calendar');
+  });
+
+  todayTasksListEl.addEventListener('change', (e) => {
+    if (e.target.classList.contains('today-task-checkbox')) {
+      toggleDailyTask(e.target.dataset.taskDate, e.target.dataset.taskId);
+    }
+  });
+
+  todayTasksListEl.addEventListener('click', (e) => {
+    const delBtn = e.target.closest('.today-task-delete-btn');
+    if (delBtn) {
+      deleteDailyTask(delBtn.dataset.taskDate, delBtn.dataset.taskId);
+    }
   });
 
   categoryFilterPillsEl.addEventListener('click', (e) => {
@@ -1612,20 +2080,85 @@
     addHabit(chip.dataset.suggestTitle, chip.dataset.suggestCat);
   });
 
-  resetDayBtn.addEventListener('click', resetTodayProgress);
+  // Sekme 2 ("Takvim") Dinleyicileri
+  calPrevMonthBtn.addEventListener('click', () => {
+    calendarViewMonth--;
+    if (calendarViewMonth < 0) {
+      calendarViewMonth = 11;
+      calendarViewYear--;
+    }
+    renderCalendarMonth();
+  });
 
-  // Sekme 2 ("30 Gün") Izgara Tıklama Dinleyicisi
-  monthlyHabitListEl.addEventListener('click', (e) => {
-    const cellBtn = e.target.closest('.month-day-cell');
-    if (!cellBtn) return;
-    const habitId = cellBtn.dataset.monthHabitId;
-    const dateKey = cellBtn.dataset.monthDateKey;
-    if (habitId && dateKey) {
-      toggleHabitOnDate(habitId, dateKey, false);
+  calNextMonthBtn.addEventListener('click', () => {
+    calendarViewMonth++;
+    if (calendarViewMonth > 11) {
+      calendarViewMonth = 0;
+      calendarViewYear++;
+    }
+    renderCalendarMonth();
+  });
+
+  calTodayBtn.addEventListener('click', () => {
+    const now = new Date();
+    calendarViewYear = now.getFullYear();
+    calendarViewMonth = now.getMonth();
+    selectedCalendarDateKey = getTodayKey();
+    renderCalendarMonth();
+    renderCalendarDayDetail();
+  });
+
+  calendarDaysGridEl.addEventListener('click', (e) => {
+    const cell = e.target.closest('.cal-day-cell');
+    if (!cell || !cell.dataset.calDate) return;
+    selectedCalendarDateKey = cell.dataset.calDate;
+
+    // Tıklanan gün başka bir aya aitse takvimi o aya kaydır
+    const dt = parseDateKey(selectedCalendarDateKey);
+    calendarViewYear = dt.getFullYear();
+    calendarViewMonth = dt.getMonth();
+
+    renderCalendarMonth();
+    renderCalendarDayDetail();
+  });
+
+  dayTaskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!selectedCalendarDateKey) {
+      selectedCalendarDateKey = getTodayKey();
+    }
+    addDailyTask(selectedCalendarDateKey, dayTaskInput.value);
+    dayTaskInput.value = '';
+    dayTaskInput.focus();
+  });
+
+  dayDetailTasksListEl.addEventListener('change', (e) => {
+    if (e.target.classList.contains('cal-task-checkbox')) {
+      toggleDailyTask(e.target.dataset.taskDate, e.target.dataset.taskId);
     }
   });
 
-  // Sekme 3 ("Notlar") Olay Dinleyicileri
+  dayDetailTasksListEl.addEventListener('click', (e) => {
+    const delBtn = e.target.closest('.cal-task-delete-btn');
+    if (delBtn) {
+      deleteDailyTask(delBtn.dataset.taskDate, delBtn.dataset.taskId);
+    }
+  });
+
+  dayDetailHabitsListEl.addEventListener('change', (e) => {
+    if (e.target.classList.contains('cal-habit-checkbox')) {
+      const habitId = e.target.dataset.habitId;
+      const dateKey = e.target.dataset.dateKey;
+      if (habitId && dateKey) {
+        toggleHabitOnDate(habitId, dateKey, false);
+      }
+    }
+  });
+
+  // Sekme 3 ("İlerleme") Dinleyicisi
+  resetDayBtn.addEventListener('click', resetTodayProgress);
+
+  // Sekme 4 ("Notlar") Dinleyicileri
   journalDateInput.addEventListener('change', () => {
     if (journalDateInput.value) {
       selectJournalDate(journalDateInput.value);
@@ -1676,34 +2209,25 @@
     }
   });
 
-  // Sekme 4 ("Günün Sözü") Olay Dinleyicileri
+  // Sekme 5 ("Söz") Dinleyicileri
   newQuoteBtn.addEventListener('click', () => {
     initQuoteOfTheDay(true);
   });
 
   copyQuoteBtn.addEventListener('click', copyCurrentQuoteToClipboard);
 
-  // Veri Yedekleme & Geri Yükleme Olay Dinleyicileri
-  exportJsonBtn.addEventListener('click', exportBackupToJson);
-
-  importJsonBtn.addEventListener('click', () => {
-    importJsonInput.click();
-  });
-
-  importJsonInput.addEventListener('change', (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      importBackupFromJsonFile(file);
-    }
-  });
-
   // Başlangıç
   loadTheme();
   renderCurrentDate();
   loadHabits();
+  loadDailyTasks();
   loadNotes();
-  renderJournalSection();
+  selectedCalendarDateKey = getTodayKey();
   applyViewMode(activeViewMode);
+  renderCalendarMonth();
+  renderCalendarDayDetail();
+  renderProgressTab();
+  renderJournalSection();
   initQuoteOfTheDay(false);
   switchTab(activeTab);
   registerServiceWorker();
