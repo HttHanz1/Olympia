@@ -11,11 +11,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="manifest" href="manifest.json?v=6" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=6" />
-  <link rel="apple-touch-icon" href="icon.svg?v=6" />
+  <link rel="manifest" href="manifest.json?v=7" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=7" />
+  <link rel="apple-touch-icon" href="icon.svg?v=7" />
   <title>Olimpya — Kişisel Alışkanlık & Planlama</title>
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
   <div class="app-container">
@@ -483,16 +483,21 @@
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Geçmiş Notlar Listesi -->
-      <div class="card notes-history-card">
-        <div class="notes-history-header">
-          <h3>Kaydedilmiş Notlar</h3>
-          <span id="notes-history-count" class="progress-ratio-badge">0 not</span>
+          <!-- Tek Butonla Açılan "Kaydedilmiş Notlar" Tam Genişlikli Butonu -->
+          <button type="button" id="open-saved-notes-btn" class="open-saved-notes-btn" aria-haspopup="dialog">
+            <span class="saved-notes-btn-left">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Kaydedilmiş Notlar</span>
+            </span>
+            <span id="saved-notes-btn-count" class="saved-notes-count-pill">0</span>
+          </button>
         </div>
-        <div id="notes-history-list" class="notes-history-list"></div>
       </div>
     </section>
 
@@ -541,6 +546,36 @@
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- ========================================================================
+       KAYDEDİLMİŞ NOTLAR PENCERESİ (MODAL / OVERLAY)
+       ======================================================================== -->
+  <div id="saved-notes-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="saved-notes-modal-title" hidden>
+    <div class="card modal-window saved-notes-modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <h2 id="saved-notes-modal-title">Kaydedilmiş Notlar</h2>
+          <span id="notes-history-count" class="progress-ratio-badge">0 not</span>
+        </div>
+        <button type="button" id="close-saved-notes-btn" class="icon-btn" title="Kapat" aria-label="Kaydedilmiş Notlar Penceresini Kapat">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <p class="modal-section-desc">Düzenlemek veya görüntülemek istediğiniz güne tıklayın.</p>
+
+      <div id="notes-history-list" class="notes-history-list saved-notes-modal-list"></div>
+    </div>
   </div>
 
   <!-- ========================================================================
@@ -747,6 +782,6 @@
     </div>
   </nav>
 
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>

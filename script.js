@@ -165,6 +165,10 @@
   const journalFeedbackEl = document.getElementById('journal-feedback');
   const journalSaveBtn = document.getElementById('journal-save-btn');
   const journalClearBtn = document.getElementById('journal-clear-btn');
+  const openSavedNotesBtn = document.getElementById('open-saved-notes-btn');
+  const savedNotesBtnCountEl = document.getElementById('saved-notes-btn-count');
+  const savedNotesModalBackdrop = document.getElementById('saved-notes-modal-backdrop');
+  const closeSavedNotesBtn = document.getElementById('close-saved-notes-btn');
   const notesHistoryCountEl = document.getElementById('notes-history-count');
   const notesHistoryListEl = document.getElementById('notes-history-list');
 
@@ -1383,17 +1387,36 @@
     renderJournalSection();
   }
 
+  function openSavedNotesModal() {
+    renderNotesHistoryList();
+    if (savedNotesModalBackdrop) {
+      savedNotesModalBackdrop.hidden = false;
+    }
+  }
+
+  function closeSavedNotesModal() {
+    if (savedNotesModalBackdrop) {
+      savedNotesModalBackdrop.hidden = true;
+    }
+  }
+
   function renderNotesHistoryList() {
     const entries = Object.entries(dailyNotes)
       .filter(([key, val]) => /^\d{4}-\d{2}-\d{2}$/.test(key) && typeof val === 'string' && val.trim().length > 0)
       .sort((a, b) => b[0].localeCompare(a[0]));
 
-    notesHistoryCountEl.textContent = `${entries.length} not`;
+    if (notesHistoryCountEl) {
+      notesHistoryCountEl.textContent = `${entries.length} not`;
+    }
+    if (savedNotesBtnCountEl) {
+      savedNotesBtnCountEl.textContent = String(entries.length);
+    }
+
     notesHistoryListEl.innerHTML = '';
 
     if (entries.length === 0) {
       notesHistoryListEl.innerHTML = `
-        <p class="note-history-empty">Henüz kaydedilmiş bir günlük not bulunmuyor. Yukarıdan bugünün ilk notunu yazıp kaydedebilirsin.</p>
+        <p class="note-history-empty">Henüz kaydedilmiş not bulunmuyor</p>
       `;
       return;
     }
@@ -1961,7 +1984,7 @@
 
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('./sw.js?v=6', { updateViaCache: 'none' })
+        .register('./sw.js?v=7', { updateViaCache: 'none' })
         .then((reg) => {
           swRegistration = reg;
           reg.update().catch(() => {});
@@ -2061,8 +2084,13 @@
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !settingsModalBackdrop.hidden) {
-      closeSettingsModal();
+    if (e.key === 'Escape') {
+      if (!settingsModalBackdrop.hidden) {
+        closeSettingsModal();
+      }
+      if (savedNotesModalBackdrop && !savedNotesModalBackdrop.hidden) {
+        closeSavedNotesModal();
+      }
     }
   });
 
@@ -2453,6 +2481,20 @@
     persistCurrentJournalNote(true);
   });
 
+  if (openSavedNotesBtn) {
+    openSavedNotesBtn.addEventListener('click', openSavedNotesModal);
+  }
+  if (closeSavedNotesBtn) {
+    closeSavedNotesBtn.addEventListener('click', closeSavedNotesModal);
+  }
+  if (savedNotesModalBackdrop) {
+    savedNotesModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === savedNotesModalBackdrop) {
+        closeSavedNotesModal();
+      }
+    });
+  }
+
   notesHistoryListEl.addEventListener('click', (e) => {
     const deleteNoteBtn = e.target.closest('.delete-note-history-btn');
     if (deleteNoteBtn && deleteNoteBtn.dataset.deleteNoteDate) {
@@ -2466,6 +2508,7 @@
     const historyItem = e.target.closest('.note-history-item');
     if (historyItem && historyItem.dataset.historyDate) {
       selectJournalDate(historyItem.dataset.historyDate);
+      closeSavedNotesModal();
       journalTextarea.focus();
     }
   });
