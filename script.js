@@ -3,7 +3,6 @@
   const NOTES_KEY = 'habitflow_notes_v1';
   const TASKS_KEY = 'habitflow_tasks_v1';
   const THEME_KEY = 'habitflow_theme_v1';
-  const VIEW_MODE_KEY = 'habitflow_view_v1';
   const ACTIVE_TAB_KEY = 'olimpya_active_tab_v2';
   const QUOTE_CACHE_KEY = 'olimpya_daily_quote_v1';
 
@@ -39,17 +38,23 @@
     { quote: 'Dinlenmeyi öğren, vazgeçmeyi değil. Küçük bir adım bile hiç adım atmamaktan üstündür.', author: 'Banksy' }
   ];
 
-  // Varsayılan Kategori Renk Eşleşmeleri
-  const PRESET_CATEGORY_COLORS = {
-    'sağlık': 'emerald',
-    'odak/iş': 'indigo',
-    'iş': 'indigo',
-    'üretkenlik': 'indigo',
-    'spor': 'amber',
-    'kişisel gelişim': 'purple',
-    'zihin': 'purple',
-    'okuma': 'purple',
-    'beslenme': 'emerald'
+  // 5 Olimpiyat Rengi Sistemi
+  const OLYMPIC_COLORS = ['blue', 'black', 'red', 'yellow', 'green'];
+  const DEFAULT_OLYMPIC_COLOR = 'yellow'; // #FCB131
+
+  // Eski kayıtların renklerini 5 Olimpiyat rengine eşle
+  const LEGACY_COLOR_MAP = {
+    blue: 'blue',
+    indigo: 'blue',
+    cyan: 'blue',
+    black: 'black',
+    red: 'red',
+    rose: 'red',
+    purple: 'red',
+    yellow: 'yellow',
+    amber: 'yellow',
+    green: 'green',
+    emerald: 'green'
   };
 
   const THEME_META_COLORS = {
@@ -58,9 +63,8 @@
     pastel: '#d97757'
   };
 
-  const COLOR_PALETTE = ['emerald', 'indigo', 'amber', 'purple', 'rose', 'cyan'];
   const DAY_SHORT_NAMES = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  const RING_CIRCUMFERENCE = 2 * Math.PI * 42; // r=42 -> ~263.89
+  const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
 
   // DOM Elemanları — Üst Başlık ve Ayarlar Modalı
   const currentDateEl = document.getElementById('current-date');
@@ -79,6 +83,8 @@
   const importJsonBtn = document.getElementById('import-json-btn');
   const importJsonInput = document.getElementById('import-json-input');
   const dataBackupStatusEl = document.getElementById('data-backup-status');
+  const forceUpdateAppBtn = document.getElementById('force-update-app-btn');
+  const forceUpdateBtnLabelEl = document.getElementById('force-update-btn-label');
   const resetAllDataBtn = document.getElementById('reset-all-data-btn');
 
   // Alt Navigasyon (5 Sekmeli Bottom Tab Bar)
@@ -94,17 +100,11 @@
   // Sekme 1 ("7 Gün") Elemanları
   const habitForm = document.getElementById('habit-form');
   const habitTitleInput = document.getElementById('habit-title');
-  const habitCategorySelect = document.getElementById('habit-category-select');
-  const customCategoryWrapper = document.getElementById('custom-category-wrapper');
-  const habitCategoryCustomInput = document.getElementById('habit-category-custom');
-  const quickCategoryPills = document.querySelectorAll('.quick-cat-pill');
+  const addColorPickerEl = document.getElementById('add-color-picker');
   const todayTasksSectionEl = document.getElementById('today-tasks-section');
   const todayTasksListEl = document.getElementById('today-tasks-list');
   const goCalendarFromTasksBtn = document.getElementById('go-calendar-from-tasks-btn');
-  const categoryFilterPillsEl = document.getElementById('category-filter-pills');
   const visibleHabitCountEl = document.getElementById('visible-habit-count');
-  const viewButtons = document.querySelectorAll('.view-btn');
-  const weeklyBoardHeaderEl = document.getElementById('weekly-board-header');
   const habitListEl = document.getElementById('habit-list');
   const emptyStateEl = document.getElementById('empty-state');
   const emptyTitleEl = document.getElementById('empty-title');
@@ -140,7 +140,6 @@
   const weeklyRangeSubEl = document.getElementById('weekly-range-sub');
   const monthlyTotalValueEl = document.getElementById('monthly-total-value');
   const monthlyNameSubEl = document.getElementById('monthly-name-sub');
-  const categoryBreakdownListEl = document.getElementById('category-breakdown-list');
   const habitBreakdownListEl = document.getElementById('habit-breakdown-list');
 
   // Sekme 4 ("Notlar") Elemanları
@@ -167,10 +166,9 @@
 
   // Uygulama Durumu (State)
   let habits = [];
-  let dailyNotes = {}; // { "YYYY-MM-DD": "Not metni" }
-  let dailyTasks = {}; // { "YYYY-MM-DD": [ { id, title, completed, createdAt } ] }
-  let activeCategoryFilter = 'all';
-  let activeViewMode = localStorage.getItem(VIEW_MODE_KEY) === 'weekly' ? 'weekly' : 'daily';
+  let dailyNotes = {};
+  let dailyTasks = {};
+  let selectedAddColor = DEFAULT_OLYMPIC_COLOR;
   let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || '7days';
   let editingHabitId = null;
   let selectedNoteDateKey = '';
@@ -179,12 +177,21 @@
   // Takvim Durumu
   const initialNow = new Date();
   let calendarViewYear = initialNow.getFullYear();
-  let calendarViewMonth = initialNow.getMonth(); // 0..11
+  let calendarViewMonth = initialNow.getMonth();
   let selectedCalendarDateKey = '';
 
   // ==========================================================================
-  // TARİH YARDIMCILARI
+  // TARİH VE RENK YARDIMCILARI
   // ==========================================================================
+  function normalizeOlympicColor(rawColor) {
+    if (typeof rawColor === 'string') {
+      const clean = rawColor.trim().toLowerCase();
+      if (OLYMPIC_COLORS.includes(clean)) return clean;
+      if (LEGACY_COLOR_MAP[clean]) return LEGACY_COLOR_MAP[clean];
+    }
+    return DEFAULT_OLYMPIC_COLOR;
+  }
+
   function formatDateKey(dateObj) {
     const year = dateObj.getFullYear();
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -355,19 +362,6 @@
     return isCompletedOnDate(habit, getTodayKey());
   }
 
-  function getCategoryColor(categoryName) {
-    if (!categoryName) return 'indigo';
-    const normalized = categoryName.trim().toLocaleLowerCase('tr-TR');
-    if (PRESET_CATEGORY_COLORS[normalized]) {
-      return PRESET_CATEGORY_COLORS[normalized];
-    }
-    let hash = 0;
-    for (let i = 0; i < normalized.length; i++) {
-      hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
-  }
-
   function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -398,19 +392,6 @@
     });
   }
 
-  function applyViewMode(viewMode) {
-    activeViewMode = viewMode === 'weekly' ? 'weekly' : 'daily';
-    localStorage.setItem(VIEW_MODE_KEY, activeViewMode);
-
-    viewButtons.forEach((btn) => {
-      const isSelected = btn.dataset.view === activeViewMode;
-      btn.classList.toggle('active', isSelected);
-      btn.setAttribute('aria-selected', String(isSelected));
-    });
-
-    renderHabits();
-  }
-
   function renderCurrentDate() {
     const now = new Date();
     const formatted = new Intl.DateTimeFormat('tr-TR', {
@@ -431,7 +412,6 @@
     if (!Array.isArray(rawList)) return [];
 
     return rawList.map((habit, index) => {
-      const category = typeof habit.category === 'string' ? habit.category.trim() : '';
       const completedDates = Array.isArray(habit.completedDates)
         ? Array.from(
             new Set(
@@ -449,8 +429,7 @@
       const normalizedHabit = {
         id: habit.id || `${Date.now().toString(36)}_${index}`,
         title: typeof habit.title === 'string' && habit.title.trim() ? habit.title.trim() : 'Alışkanlık',
-        category,
-        color: habit.color || getCategoryColor(category),
+        color: normalizeOlympicColor(habit.color),
         completedDates: completedDates.sort(),
         completed: completedDates.includes(todayKey),
         bestStreak: Number(habit.bestStreak) || 0,
@@ -480,6 +459,7 @@
       const todayKey = getTodayKey();
       habits.forEach((h) => {
         h.completed = isCompletedOnDate(h, todayKey);
+        h.color = normalizeOlympicColor(h.color);
         const { bestStreak } = calculateHabitStreaks(h);
         h.bestStreak = bestStreak;
       });
@@ -563,8 +543,44 @@
   }
 
   // ==========================================================================
-  // SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI
+  // SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI (YALNIZCA KARTLAR & 5 RENK)
   // ==========================================================================
+  function renderColorSwatchesHTML(selectedColor) {
+    const activeColor = normalizeOlympicColor(selectedColor);
+    const labels = {
+      blue: 'Mavi (#0081C8)',
+      black: 'Siyah (#000000)',
+      red: 'Kırmızı (#EE334E)',
+      yellow: 'Sarı (#FCB131)',
+      green: 'Yeşil (#00A651)'
+    };
+
+    return OLYMPIC_COLORS.map((colorKey) => {
+      const isSelected = colorKey === activeColor;
+      return `
+        <button
+          type="button"
+          class="color-swatch-btn${isSelected ? ' active' : ''}"
+          data-color="${colorKey}"
+          role="radio"
+          aria-checked="${isSelected}"
+          title="${labels[colorKey]}"
+          aria-label="${labels[colorKey]}"
+        ></button>
+      `;
+    }).join('');
+  }
+
+  function setAddFormColor(colorKey) {
+    selectedAddColor = normalizeOlympicColor(colorKey);
+    if (!addColorPickerEl) return;
+    addColorPickerEl.querySelectorAll('.color-swatch-btn').forEach((btn) => {
+      const isMatch = btn.dataset.color === selectedAddColor;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-checked', String(isMatch));
+    });
+  }
+
   function renderTodaySpecialTasksOn7Days() {
     const todayKey = getTodayKey();
     const todayTasks = getTasksForDate(todayKey);
@@ -581,6 +597,7 @@
     todayTasks.forEach((task) => {
       const li = document.createElement('li');
       li.className = `habit-item${task.completed ? ' completed' : ''}`;
+      li.dataset.color = 'yellow';
       li.innerHTML = `
         <div class="habit-main-row">
           <label class="habit-label">
@@ -626,86 +643,17 @@
     });
   }
 
-  function renderCategoryFilterPills() {
-    const categoryCounts = new Map();
-    habits.forEach((h) => {
-      if (h.category) {
-        categoryCounts.set(h.category, (categoryCounts.get(h.category) || 0) + 1);
-      }
-    });
-
-    if (activeCategoryFilter !== 'all' && !categoryCounts.has(activeCategoryFilter)) {
-      activeCategoryFilter = 'all';
-    }
-
-    categoryFilterPillsEl.innerHTML = '';
-
-    const allBtn = document.createElement('button');
-    allBtn.type = 'button';
-    allBtn.className = `filter-pill${activeCategoryFilter === 'all' ? ' active' : ''}`;
-    allBtn.dataset.filterCat = 'all';
-    allBtn.setAttribute('role', 'tab');
-    allBtn.setAttribute('aria-selected', String(activeCategoryFilter === 'all'));
-    allBtn.innerHTML = `
-      <span>Tümü</span>
-      <span class="pill-count">${habits.length}</span>
-    `;
-    categoryFilterPillsEl.appendChild(allBtn);
-
-    categoryCounts.forEach((count, categoryName) => {
-      const color = getCategoryColor(categoryName);
-      const isSelected = activeCategoryFilter === categoryName;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `filter-pill${isSelected ? ' active' : ''}`;
-      btn.dataset.filterCat = categoryName;
-      btn.dataset.color = color;
-      btn.setAttribute('role', 'tab');
-      btn.setAttribute('aria-selected', String(isSelected));
-      btn.innerHTML = `
-        <span class="cat-dot"></span>
-        <span>${escapeHTML(categoryName)}</span>
-        <span class="pill-count">${count}</span>
-      `;
-      categoryFilterPillsEl.appendChild(btn);
-    });
-  }
-
-  function renderWeeklyBoardHeader(weekDays, hasVisibleHabits) {
-    if (activeViewMode !== 'weekly' || !hasVisibleHabits) {
-      weeklyBoardHeaderEl.hidden = true;
-      weeklyBoardHeaderEl.innerHTML = '';
-      return;
-    }
-
-    weeklyBoardHeaderEl.hidden = false;
-    const daysColsHTML = weekDays
-      .map(
-        (d) => `
-        <div class="weekly-day-head${d.isToday ? ' is-today' : ''}">
-          <span class="d-name">${d.shortName}</span>
-          <span class="d-num">${d.dayNum}</span>
-        </div>
-      `
-      )
-      .join('');
-
-    weeklyBoardHeaderEl.innerHTML = `
-      <div class="weekly-col-title">Alışkanlık & Seri</div>
-      ${daysColsHTML}
-      <div class="weekly-col-actions">İşlem</div>
-    `;
-  }
-
   function createHabitItemElement(habit, weekDays) {
     const todayCompleted = isCompletedToday(habit);
+    const color = normalizeOlympicColor(habit.color);
     const li = document.createElement('li');
     li.dataset.id = habit.id;
+    li.dataset.color = color;
 
     if (editingHabitId === habit.id) {
       li.className = 'habit-item';
       li.innerHTML = `
-        <form class="habit-edit-form" data-edit-id="${habit.id}" autocomplete="off">
+        <form class="habit-edit-form" data-edit-id="${habit.id}" data-selected-color="${color}" autocomplete="off">
           <input
             type="text"
             class="habit-edit-title"
@@ -714,13 +662,9 @@
             maxlength="80"
             required
           />
-          <input
-            type="text"
-            class="habit-edit-cat"
-            value="${escapeHTML(habit.category || '')}"
-            placeholder="Kategori (örn. Sağlık)"
-            maxlength="24"
-          />
+          <div class="olympic-color-picker edit-color-picker" role="radiogroup" aria-label="Renk Seç">
+            ${renderColorSwatchesHTML(color)}
+          </div>
           <div class="edit-actions">
             <button type="submit" class="save-edit-btn">Kaydet</button>
             <button type="button" class="cancel-edit-btn">İptal</button>
@@ -731,14 +675,6 @@
     }
 
     const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
-    const color = habit.color || getCategoryColor(habit.category);
-
-    const categoryBadge = habit.category
-      ? `<span class="category-tag" data-color="${color}">
-           <span class="cat-dot"></span>
-           ${escapeHTML(habit.category)}
-         </span>`
-      : '';
 
     const streakBadge = `
       <span class="streak-badge${currentStreak > 0 ? ' has-streak' : ''}" title="Aktif Seri: ${currentStreak} gün | En İyi Seri: ${bestStreak} gün">
@@ -765,50 +701,6 @@
         </button>
       </div>
     `;
-
-    if (activeViewMode === 'weekly') {
-      li.className = `habit-item weekly-row${todayCompleted ? ' completed' : ''}`;
-      const cellsHTML = weekDays
-        .map((d) => {
-          const done = isCompletedOnDate(habit, d.key);
-          const stateClass = `${done ? ' is-done' : ''}${d.isToday ? ' is-today' : ''}`;
-          const label = `${escapeHTML(habit.title)} - ${d.dayNum} ${d.monthShort} ${d.shortName}`;
-          return `
-            <div class="weekly-cell">
-              <button
-                type="button"
-                class="weekly-check-btn day-toggle-btn${stateClass}"
-                data-habit-id="${habit.id}"
-                data-date-key="${d.key}"
-                title="${label}"
-                aria-label="${label}"
-                aria-pressed="${done}"
-                ${d.isFuture ? 'disabled' : ''}
-              >
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </button>
-            </div>
-          `;
-        })
-        .join('');
-
-      li.innerHTML = `
-        <div class="weekly-habit-info">
-          <div class="habit-title-wrapper">
-            <span class="habit-title">${escapeHTML(habit.title)}</span>
-          </div>
-          <div class="habit-meta">
-            ${categoryBadge}
-            ${streakBadge}
-          </div>
-        </div>
-        ${cellsHTML}
-        ${actionButtonsHTML}
-      `;
-      return li;
-    }
 
     li.className = `habit-item${todayCompleted ? ' completed' : ''}`;
 
@@ -863,10 +755,10 @@
           </span>
           <div class="habit-content">
             <div class="habit-title-wrapper">
+              <span class="habit-color-dot" data-color="${color}" aria-hidden="true"></span>
               <span class="habit-title">${escapeHTML(habit.title)}</span>
             </div>
             <div class="habit-meta">
-              ${categoryBadge}
               ${streakBadge}
             </div>
           </div>
@@ -886,40 +778,26 @@
 
   function renderHabits() {
     renderTodaySpecialTasksOn7Days();
-    renderCategoryFilterPills();
     const weekDays = getCurrentWeekDays();
 
-    const filteredHabits = habits.filter((habit) => {
-      if (activeCategoryFilter === 'all') return true;
-      return habit.category === activeCategoryFilter;
-    });
+    const pendingHabits = habits.filter((h) => !isCompletedToday(h));
+    const completedHabits = habits.filter((h) => isCompletedToday(h));
 
-    const pendingHabits = filteredHabits.filter((h) => !isCompletedToday(h));
-    const completedHabits = filteredHabits.filter((h) => isCompletedToday(h));
-
-    renderWeeklyBoardHeader(weekDays, filteredHabits.length > 0);
     habitListEl.innerHTML = '';
 
-    if (filteredHabits.length === 0) {
+    if (habits.length === 0) {
       emptyStateEl.hidden = false;
       visibleHabitCountEl.textContent = '';
-
-      if (habits.length === 0) {
-        emptyTitleEl.textContent = 'Büyük değişimler küçük adımlarla başlar';
-        emptyDescEl.textContent =
-          'Henüz takip ettiğin bir alışkanlık yok. Yukarıdan yeni bir hedef ekle veya aşağıdaki örneklerden biriyle hemen başla:';
-        emptySuggestionsEl.hidden = false;
-      } else {
-        emptyTitleEl.textContent = `"${activeCategoryFilter}" kategorisinde alışkanlık yok`;
-        emptyDescEl.textContent = 'Diğer kategorilere göz atabilir veya bu kategoriye yeni bir alışkanlık ekleyebilirsin.';
-        emptySuggestionsEl.hidden = true;
-      }
+      emptyTitleEl.textContent = 'Büyük değişimler küçük adımlarla başlar';
+      emptyDescEl.textContent =
+        'Henüz takip ettiğin bir alışkanlık yok. Yukarıdan yeni bir hedef ekle veya aşağıdaki örneklerden biriyle hemen başla:';
+      emptySuggestionsEl.hidden = false;
     } else {
       emptyStateEl.hidden = true;
       visibleHabitCountEl.textContent =
         pendingHabits.length > 0
           ? `${pendingHabits.length} bekleyen`
-          : 'Bugün tümü tamamlandı';
+          : 'Tüm hedefler tamamlandı';
 
       pendingHabits.forEach((habit) => {
         habitListEl.appendChild(createHabitItemElement(habit, weekDays));
@@ -964,12 +842,10 @@
 
     calendarMonthYearLabelEl.textContent = monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1);
 
-    // Pazartesi tabanlı başlangıç ofseti (0: Pzt, ..., 6: Paz)
     const startJsDay = monthStart.getDay();
     const startOffset = startJsDay === 0 ? 6 : startJsDay - 1;
     const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
 
-    // Toplam hücre sayısı (35 veya 42)
     const totalCells = startOffset + daysInMonth > 35 ? 42 : 35;
     const firstGridDate = new Date(calendarViewYear, calendarViewMonth, 1 - startOffset, 12, 0, 0);
 
@@ -1089,10 +965,7 @@
     } else {
       habits.forEach((habit) => {
         const done = isCompletedOnDate(habit, selectedCalendarDateKey);
-        const color = habit.color || getCategoryColor(habit.category);
-        const categoryBadge = habit.category
-          ? `<span class="category-tag" data-color="${color}"><span class="cat-dot"></span>${escapeHTML(habit.category)}</span>`
-          : '';
+        const color = normalizeOlympicColor(habit.color);
 
         const li = document.createElement('li');
         li.className = `day-detail-item${done ? ' completed' : ''}`;
@@ -1113,11 +986,11 @@
             </span>
             <div class="habit-content">
               <div class="habit-title-wrapper">
+                <span class="habit-color-dot" data-color="${color}" aria-hidden="true"></span>
                 <span class="habit-title">${escapeHTML(habit.title)}</span>
               </div>
             </div>
           </label>
-          ${categoryBadge}
         `;
         dayDetailHabitsListEl.appendChild(li);
       });
@@ -1125,7 +998,7 @@
   }
 
   // ==========================================================================
-  // SEKME 3: AYRI "İLERLEME" SEKMESİ (TÜM İSTATİSTİKLER & ANALİZLER)
+  // SEKME 3: AYRI "İLERLEME" SEKMESİ (GENEL VE ALIŞKANLIK BAZLI İLERLEME)
   // ==========================================================================
   function renderProgressTab() {
     const todayKey = getTodayKey();
@@ -1133,7 +1006,6 @@
     const completedTodayCount = habits.filter((h) => isCompletedOnDate(h, todayKey)).length;
     const percent = total === 0 ? 0 : Math.round((completedTodayCount / total) * 100);
 
-    // Dairesel Halka ve Yatay Çubuk
     const offset = RING_CIRCUMFERENCE - (percent / 100) * RING_CIRCUMFERENCE;
     if (progressRingCircleEl) {
       progressRingCircleEl.style.strokeDashoffset = String(offset);
@@ -1150,7 +1022,6 @@
     progressPercentEl.classList.toggle('all-done', isAllDone);
     progressFillEl.classList.toggle('all-done', isAllDone);
 
-    // En Yüksek Aktif Seri ve Tüm Zamanların Rekoru
     let topActiveStreak = 0;
     let topBestRecord = 0;
 
@@ -1163,12 +1034,10 @@
     topStreakValueEl.textContent = `🔥 ${topActiveStreak} gün`;
     bestRecordSubEl.textContent = `🏆 ${topBestRecord} gün`;
 
-    // Bu Haftaki Toplam Tamamlama
     const weekDays = getCurrentWeekDays();
     const weekKeySet = new Set(weekDays.map((d) => d.key));
     let weeklyCompletions = 0;
 
-    // Bu Ayki Toplam Tamamlama
     const now = new Date();
     const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-`;
     let monthlyCompletions = 0;
@@ -1191,7 +1060,6 @@
     monthlyTotalValueEl.textContent = `${monthlyCompletions} kez`;
     monthlyNameSubEl.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
-    // Motivasyon Mesajı
     if (total === 0) {
       progressMessageEl.textContent = 'İstatistikleri görmek için "7 Gün" sekmesinden ilk alışkanlığını ekle.';
     } else if (percent === 0) {
@@ -1204,56 +1072,10 @@
     } else if (percent < 100) {
       progressMessageEl.textContent = 'Yarıyı geçtin, bugünü eksiksiz tamamlamaya çok az kaldı!';
     } else {
-      progressMessageEl.textContent = 'Harika! Bugünkü tüm alışkanlıklarını tamamladın ve serini korudun.';
+      progressMessageEl.textContent = 'Tüm hedefler tamamlandı! Bugünkü serini başarıyla korudun.';
     }
 
-    // Son 30 Gün Anahtarları
     const last30KeysSet = new Set(getLast30DaysKeys());
-
-    // Kategori Bazlı Başarı Yüzdeleri
-    categoryBreakdownListEl.innerHTML = '';
-    if (habits.length === 0) {
-      categoryBreakdownListEl.innerHTML = `<p class="day-detail-empty">Henüz alışkanlık verisi bulunmuyor.</p>`;
-    } else {
-      const catStats = new Map();
-      habits.forEach((habit) => {
-        const catName = habit.category || 'Kategorisiz';
-        if (!catStats.has(catName)) {
-          catStats.set(catName, { count: 0, checks30: 0 });
-        }
-        const entry = catStats.get(catName);
-        entry.count++;
-        if (Array.isArray(habit.completedDates)) {
-          habit.completedDates.forEach((dKey) => {
-            if (last30KeysSet.has(dKey)) entry.checks30++;
-          });
-        }
-      });
-
-      catStats.forEach((val, catName) => {
-        const possible = val.count * 30;
-        const rate = possible === 0 ? 0 : Math.round((val.checks30 / possible) * 100);
-        const color = getCategoryColor(catName);
-        const div = document.createElement('div');
-        div.className = 'breakdown-item';
-        div.innerHTML = `
-          <div class="breakdown-item-top">
-            <div class="breakdown-item-title">
-              <span class="category-tag" data-color="${color}"><span class="cat-dot"></span>${escapeHTML(catName)}</span>
-              <span class="stat-sub">(${val.count} alışkanlık)</span>
-            </div>
-            <div class="breakdown-item-meta">
-              <span>${rate}%</span>
-              <span class="stat-sub">(${val.checks30}/${possible} gün)</span>
-            </div>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill${rate >= 70 ? ' all-done' : ''}" style="width: ${rate}%"></div>
-          </div>
-        `;
-        categoryBreakdownListEl.appendChild(div);
-      });
-    }
 
     // Alışkanlık Bazlı Tekil Başarı Yüzdeleri Listesi
     habitBreakdownListEl.innerHTML = '';
@@ -1269,18 +1091,15 @@
         }
         const rate30 = Math.round((checks30 / 30) * 100);
         const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
-        const color = habit.color || getCategoryColor(habit.category);
-        const categoryBadge = habit.category
-          ? `<span class="category-tag" data-color="${color}"><span class="cat-dot"></span>${escapeHTML(habit.category)}</span>`
-          : '';
+        const color = normalizeOlympicColor(habit.color);
 
         const div = document.createElement('div');
         div.className = 'breakdown-item';
         div.innerHTML = `
           <div class="breakdown-item-top">
             <div class="breakdown-item-title">
+              <span class="habit-color-dot" data-color="${color}" aria-hidden="true"></span>
               <span>${escapeHTML(habit.title)}</span>
-              ${categoryBadge}
             </div>
             <div class="breakdown-item-meta">
               <span>🔥 ${currentStreak}g (En iyi: ${bestStreak}g)</span>
@@ -1489,9 +1308,7 @@
             return;
           }
         }
-      } catch (e) {
-        // Önbellek okunamazsa devam et
-      }
+      } catch (e) {}
     }
 
     newQuoteBtn.disabled = true;
@@ -1560,25 +1377,14 @@
   // ==========================================================================
   // ALIŞKANLIK EKLEME, İŞARETLEME, DÜZENLEME VE SİLME
   // ==========================================================================
-  function getSelectedFormCategory() {
-    const selectVal = habitCategorySelect.value;
-    if (selectVal === '__custom__') {
-      return habitCategoryCustomInput.value.trim();
-    }
-    return selectVal.trim();
-  }
-
-  function addHabit(title, category) {
+  function addHabit(title, colorKey) {
     const cleanTitle = title.trim();
-    const cleanCategory = category.trim();
-
     if (!cleanTitle) return;
 
     const newHabit = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       title: cleanTitle,
-      category: cleanCategory,
-      color: getCategoryColor(cleanCategory),
+      color: normalizeOlympicColor(colorKey),
       completedDates: [],
       completed: false,
       bestStreak: 0,
@@ -1611,7 +1417,7 @@
 
     saveHabits();
 
-    if (animateIfToday && dateKey === todayKey && activeViewMode === 'daily' && activeTab === '7days') {
+    if (animateIfToday && dateKey === todayKey && activeTab === '7days') {
       const itemEl = habitListEl.querySelector(`.habit-item[data-id="${id}"]`);
       if (itemEl) {
         itemEl.classList.toggle('completed', isCompletedToday(habit));
@@ -1631,17 +1437,15 @@
     }
   }
 
-  function saveEditedHabit(id, newTitle, newCategory) {
+  function saveEditedHabit(id, newTitle, newColor) {
     const cleanTitle = newTitle.trim();
-    const cleanCategory = newCategory.trim();
     if (!cleanTitle) return;
 
     const habit = habits.find((h) => h.id === id);
     if (!habit) return;
 
     habit.title = cleanTitle;
-    habit.category = cleanCategory;
-    habit.color = getCategoryColor(cleanCategory);
+    habit.color = normalizeOlympicColor(newColor);
 
     editingHabitId = null;
     saveHabits();
@@ -1669,19 +1473,6 @@
     saveHabits();
     renderHabits();
     renderProgressTab();
-  }
-
-  function syncCategorySelectionUI(selectedValue) {
-    habitCategorySelect.value = selectedValue;
-    const isCustom = selectedValue === '__custom__';
-    customCategoryWrapper.hidden = !isCustom;
-    if (isCustom) {
-      habitCategoryCustomInput.focus();
-    }
-
-    quickCategoryPills.forEach((pill) => {
-      pill.classList.toggle('active', pill.dataset.cat === selectedValue);
-    });
   }
 
   // ==========================================================================
@@ -1753,10 +1544,9 @@
       const todayKey = getTodayKey();
       const backupPayload = {
         app: 'Olimpya',
-        version: 6,
+        version: 7,
         exportedAt: new Date().toISOString(),
         theme: localStorage.getItem(THEME_KEY) || 'light',
-        viewMode: activeViewMode,
         habits,
         tasks: dailyTasks,
         notes: dailyNotes
@@ -1793,7 +1583,6 @@
         let incomingNotes = {};
         let incomingTasks = {};
         let incomingTheme = null;
-        let incomingViewMode = null;
 
         if (Array.isArray(parsed)) {
           incomingHabits = parsed;
@@ -1807,9 +1596,6 @@
           }
           if (typeof parsed.theme === 'string') {
             incomingTheme = parsed.theme;
-          }
-          if (typeof parsed.viewMode === 'string') {
-            incomingViewMode = parsed.viewMode;
           }
         }
 
@@ -1839,9 +1625,6 @@
 
         if (incomingTheme) {
           applyTheme(incomingTheme);
-        }
-        if (incomingViewMode) {
-          applyViewMode(incomingViewMode);
         }
 
         renderHabits();
@@ -1927,7 +1710,6 @@
 
     const hadControllerOnLoad = Boolean(navigator.serviceWorker.controller);
 
-    // Yeni bir Service Worker sürümü devreye girdiği an (sonsuz döngüye girmeden) sayfayı otomatik yenile
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!hadControllerOnLoad || isRefreshingForSw) return;
       isRefreshingForSw = true;
@@ -1936,7 +1718,7 @@
 
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('./sw.js?v=3', { updateViaCache: 'none' })
+        .register('./sw.js?v=5', { updateViaCache: 'none' })
         .then((reg) => {
           swRegistration = reg;
           reg.update().catch(() => {});
@@ -1960,7 +1742,6 @@
         });
     });
 
-    // iOS Safari PWA arka plandan ön plana geldiğinde güncellemeleri sessizce denetle
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         checkForServiceWorkerUpdate();
@@ -1972,7 +1753,6 @@
     });
   }
 
-  // Kullanıcı verilerine (localStorage) dokunmadan yalnızca SW önbelleklerini temizleyip sayfayı sunucudan taze yükler
   async function forceRefreshAppCacheAndReload() {
     if (quickRefreshBtn) {
       quickRefreshBtn.classList.add('is-spinning');
@@ -1986,13 +1766,11 @@
     }
 
     try {
-      // 1. Tüm Cache Storage önbelleklerini sil (localStorage verilerine kesinlikle dokunmaz)
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
 
-      // 2. Service Worker kaydını kaldır / güncelle ki sunucudan en taze sw.js ve dosyalar çekilsin
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(
@@ -2027,7 +1805,6 @@
     });
   });
 
-  // Ayarlar Modalı ve Üst Çubuk Hızlı Yenile Dinleyicileri
   if (quickRefreshBtn) {
     quickRefreshBtn.addEventListener('click', forceRefreshAppCacheAndReload);
   }
@@ -2072,30 +1849,23 @@
   });
 
   resetAllDataBtn.addEventListener('click', resetAllUserDataWithDoubleConfirm);
+  if (forceUpdateAppBtn) {
+    forceUpdateAppBtn.addEventListener('click', forceRefreshAppCacheAndReload);
+  }
 
-  // Sekme 1 ("7 Gün") Dinleyicileri
-  viewButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      applyViewMode(btn.dataset.view);
+  // Sekme 1 ("7 Gün") Dinleyicileri — 5 Olimpiyat Rengi Seçici
+  if (addColorPickerEl) {
+    addColorPickerEl.addEventListener('click', (e) => {
+      const swatch = e.target.closest('.color-swatch-btn');
+      if (!swatch || !swatch.dataset.color) return;
+      setAddFormColor(swatch.dataset.color);
     });
-  });
-
-  habitCategorySelect.addEventListener('change', () => {
-    syncCategorySelectionUI(habitCategorySelect.value);
-  });
-
-  quickCategoryPills.forEach((pill) => {
-    pill.addEventListener('click', () => {
-      syncCategorySelectionUI(pill.dataset.cat);
-    });
-  });
+  }
 
   habitForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const category = getSelectedFormCategory();
-    addHabit(habitTitleInput.value, category);
+    addHabit(habitTitleInput.value, selectedAddColor);
     habitTitleInput.value = '';
-    habitCategoryCustomInput.value = '';
     habitTitleInput.focus();
   });
 
@@ -2117,13 +1887,6 @@
     }
   });
 
-  categoryFilterPillsEl.addEventListener('click', (e) => {
-    const pill = e.target.closest('.filter-pill');
-    if (!pill) return;
-    activeCategoryFilter = pill.dataset.filterCat;
-    renderHabits();
-  });
-
   habitListEl.addEventListener('change', (e) => {
     if (e.target.classList.contains('habit-checkbox')) {
       const itemEl = e.target.closest('.habit-item');
@@ -2134,6 +1897,22 @@
   });
 
   habitListEl.addEventListener('click', (e) => {
+    // Düzenleme formundaki 5 renk seçici buton tıklaması
+    const editSwatch = e.target.closest('.edit-color-picker .color-swatch-btn');
+    if (editSwatch) {
+      const formEl = editSwatch.closest('.habit-edit-form');
+      if (formEl) {
+        const chosenColor = normalizeOlympicColor(editSwatch.dataset.color);
+        formEl.dataset.selectedColor = chosenColor;
+        formEl.querySelectorAll('.color-swatch-btn').forEach((btn) => {
+          const isMatch = btn.dataset.color === chosenColor;
+          btn.classList.toggle('active', isMatch);
+          btn.setAttribute('aria-checked', String(isMatch));
+        });
+      }
+      return;
+    }
+
     const dayToggleBtn = e.target.closest('.day-toggle-btn');
     if (dayToggleBtn && !dayToggleBtn.disabled) {
       const habitId = dayToggleBtn.dataset.habitId;
@@ -2173,8 +1952,8 @@
       e.preventDefault();
       const id = e.target.dataset.editId;
       const titleInput = e.target.querySelector('.habit-edit-title');
-      const catInput = e.target.querySelector('.habit-edit-cat');
-      saveEditedHabit(id, titleInput.value, catInput.value);
+      const chosenColor = e.target.dataset.selectedColor || DEFAULT_OLYMPIC_COLOR;
+      saveEditedHabit(id, titleInput.value, chosenColor);
     }
   });
 
@@ -2188,7 +1967,7 @@
   emptySuggestionsEl.addEventListener('click', (e) => {
     const chip = e.target.closest('.suggestion-chip');
     if (!chip) return;
-    addHabit(chip.dataset.suggestTitle, chip.dataset.suggestCat);
+    addHabit(chip.dataset.suggestTitle, chip.dataset.suggestColor || DEFAULT_OLYMPIC_COLOR);
   });
 
   // Sekme 2 ("Takvim") Dinleyicileri
@@ -2224,7 +2003,6 @@
     if (!cell || !cell.dataset.calDate) return;
     selectedCalendarDateKey = cell.dataset.calDate;
 
-    // Tıklanan gün başka bir aya aitse takvimi o aya kaydır
     const dt = parseDateKey(selectedCalendarDateKey);
     calendarViewYear = dt.getFullYear();
     calendarViewMonth = dt.getMonth();
@@ -2334,7 +2112,7 @@
   loadDailyTasks();
   loadNotes();
   selectedCalendarDateKey = getTodayKey();
-  applyViewMode(activeViewMode);
+  renderHabits();
   renderCalendarMonth();
   renderCalendarDayDetail();
   renderProgressTab();

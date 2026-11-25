@@ -535,48 +535,120 @@ select {
   cursor: pointer;
 }
 
-.quick-categories {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  margin-top: 0.8rem;
-  padding-top: 0.75rem;
-  border-top: 1px dashed var(--border-color);
-}
-
-.quick-cat-label {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-right: 0.15rem;
-}
-
-.quick-cat-pill {
+/* 5 Olimpiyat Rengi Seçici (Mavi, Siyah, Kırmızı, Sarı, Yeşil) */
+.olympic-color-picker {
   display: inline-flex;
   align-items: center;
-  gap: 0.38rem;
-  padding: 0.26rem 0.68rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
+  gap: 0.48rem;
+  padding: 0.42rem 0.72rem;
   background-color: var(--bg-input);
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.76rem;
-  font-weight: 600;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.color-swatch-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
   cursor: pointer;
-  transition: all var(--transition);
+  padding: 0;
+  position: relative;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.quick-cat-pill:hover {
-  border-color: var(--border-hover);
-  color: var(--text-main);
+.color-swatch-btn:hover {
+  transform: scale(1.13);
 }
 
-.quick-cat-pill.active {
-  border-color: var(--primary);
-  background-color: var(--primary-soft);
-  color: var(--primary);
+.color-swatch-btn[data-color="blue"] {
+  background-color: #0081C8;
+}
+
+.color-swatch-btn[data-color="black"] {
+  background-color: #000000;
+  border: 1.5px solid #4A4A55;
+}
+
+.color-swatch-btn[data-color="red"] {
+  background-color: #EE334E;
+}
+
+.color-swatch-btn[data-color="yellow"] {
+  background-color: #FCB131;
+}
+
+.color-swatch-btn[data-color="green"] {
+  background-color: #00A651;
+}
+
+.color-swatch-btn.active {
+  transform: scale(1.16);
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--text-main);
+}
+
+/* Alışkanlık Kartında Seçili Olimpiyat Rengi (Sol Kenar Çizgisi & Başlık Yanı Nokta) */
+.habit-item[data-color="blue"] {
+  border-left: 4px solid #0081C8;
+}
+
+.habit-item[data-color="black"] {
+  border-left: 4px solid #000000;
+}
+
+[data-theme="dark"] .habit-item[data-color="black"] {
+  border-left: 4px solid #4A4A55;
+}
+
+.habit-item[data-color="red"] {
+  border-left: 4px solid #EE334E;
+}
+
+.habit-item[data-color="yellow"] {
+  border-left: 4px solid #FCB131;
+}
+
+.habit-item[data-color="green"] {
+  border-left: 4px solid #00A651;
+}
+
+.habit-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: #FCB131;
+}
+
+.habit-color-dot[data-color="blue"] {
+  background-color: #0081C8;
+}
+
+.habit-color-dot[data-color="black"] {
+  background-color: #000000;
+  border: 1.5px solid #4A4A55;
+}
+
+.habit-color-dot[data-color="red"] {
+  background-color: #EE334E;
+}
+
+.habit-color-dot[data-color="yellow"] {
+  background-color: #FCB131;
+}
+
+.habit-color-dot[data-color="green"] {
+  background-color: #00A651;
+}
+
+.list-section-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
 .cat-dot {
@@ -899,7 +971,9 @@ select {
 /* Yumuşak Üstü Çizili Animasyonlu Başlık */
 .habit-title-wrapper {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   max-width: 100%;
   width: fit-content;
 }
@@ -2825,46 +2899,24 @@ textarea#journal-textarea:focus {
     font-size: 1.08rem;
   }
 
-  .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 0.65rem;
-  }
-
   .form-row {
     flex-direction: column;
   }
 
-  .flex-grow,
-  .category-select-group,
-  .custom-category-group {
+  .flex-grow {
     width: 100%;
     flex: 1 1 auto;
+  }
+
+  .olympic-color-picker {
+    width: 100%;
+    justify-content: space-around;
+    padding: 0.55rem 0.75rem;
   }
 
   .primary-btn {
     padding: 0.75rem 1rem;
     width: 100%;
-  }
-
-  .weekly-board-header {
-    display: none !important;
-  }
-
-  .habit-item.weekly-row {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
   }
 
   .day-pill {

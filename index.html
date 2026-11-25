@@ -11,11 +11,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="manifest" href="manifest.json?v=4" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=4" />
-  <link rel="apple-touch-icon" href="icon.svg?v=4" />
+  <link rel="manifest" href="manifest.json?v=5" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=5" />
+  <link rel="apple-touch-icon" href="icon.svg?v=5" />
   <title>Olimpya — Kişisel Alışkanlık & Planlama</title>
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
   <div class="app-container">
@@ -59,7 +59,7 @@
     </header>
 
     <!-- ======================================================================
-         SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI
+         SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI (YALNIZCA KARTLAR & 5 OLİMPİYAT RENGİ)
          ====================================================================== -->
     <main id="tab-panel-7days" class="tab-panel active" role="tabpanel" aria-labelledby="nav-btn-7days">
       <!-- Yeni Alışkanlık Ekleme Formu -->
@@ -76,52 +76,62 @@
                 required
               />
             </div>
-            <div class="input-group category-select-group">
-              <label for="habit-category-select" class="sr-only">Kategori Seçin</label>
-              <select id="habit-category-select" aria-label="Kategori Seçin">
-                <option value="Sağlık">Sağlık</option>
-                <option value="Odak/İş">Odak/İş</option>
-                <option value="Spor">Spor</option>
-                <option value="Kişisel Gelişim">Kişisel Gelişim</option>
-                <option value="__custom__">+ Özel Kategori...</option>
-                <option value="">Kategorisiz</option>
-              </select>
+
+            <!-- 5 Olimpiyat Rengi Seçici (Mavi, Siyah, Kırmızı, Sarı [Varsayılan], Yeşil) -->
+            <div class="olympic-color-picker" id="add-color-picker" role="radiogroup" aria-label="Alışkanlık Rengi Seçin">
+              <button
+                type="button"
+                class="color-swatch-btn"
+                data-color="blue"
+                role="radio"
+                aria-checked="false"
+                title="Mavi (#0081C8)"
+                aria-label="Mavi"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch-btn"
+                data-color="black"
+                role="radio"
+                aria-checked="false"
+                title="Siyah (#000000)"
+                aria-label="Siyah"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch-btn"
+                data-color="red"
+                role="radio"
+                aria-checked="false"
+                title="Kırmızı (#EE334E)"
+                aria-label="Kırmızı"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch-btn active"
+                data-color="yellow"
+                role="radio"
+                aria-checked="true"
+                title="Sarı (#FCB131)"
+                aria-label="Sarı (Varsayılan)"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch-btn"
+                data-color="green"
+                role="radio"
+                aria-checked="false"
+                title="Yeşil (#00A651)"
+                aria-label="Yeşil"
+              ></button>
             </div>
-            <div class="input-group custom-category-group" id="custom-category-wrapper" hidden>
-              <label for="habit-category-custom" class="sr-only">Özel Kategori Adı</label>
-              <input
-                type="text"
-                id="habit-category-custom"
-                placeholder="Özel kategori adı..."
-                maxlength="24"
-              />
-            </div>
+
             <button type="submit" class="primary-btn">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
               <span>Ekle</span>
-            </button>
-          </div>
-
-          <!-- Hızlı Kategori Seçim Rozetleri -->
-          <div class="quick-categories" aria-label="Hızlı Kategori Seçimi">
-            <span class="quick-cat-label">Kategori:</span>
-            <button type="button" class="quick-cat-pill active" data-cat="Sağlık" data-color="emerald">
-              <span class="cat-dot"></span>Sağlık
-            </button>
-            <button type="button" class="quick-cat-pill" data-cat="Odak/İş" data-color="indigo">
-              <span class="cat-dot"></span>Odak/İş
-            </button>
-            <button type="button" class="quick-cat-pill" data-cat="Spor" data-color="amber">
-              <span class="cat-dot"></span>Spor
-            </button>
-            <button type="button" class="quick-cat-pill" data-cat="Kişisel Gelişim" data-color="purple">
-              <span class="cat-dot"></span>Kişisel Gelişim
-            </button>
-            <button type="button" class="quick-cat-pill" data-cat="__custom__" data-color="rose">
-              <span class="cat-dot"></span>Özel...
             </button>
           </div>
         </form>
@@ -144,39 +154,13 @@
         <ul id="today-tasks-list" class="habit-list"></ul>
       </section>
 
-      <!-- Alışkanlık Listesi ve Kategori Filtre Hapları -->
+      <!-- Alışkanlık Listesi (Sadece Kartlar Görünümü) -->
       <section class="habits-section" aria-label="7 Günlük Alışkanlık Listesi">
         <div class="list-toolbar">
-          <div id="category-filter-pills" class="filter-pills" role="tablist" aria-label="Kategori Filtreleri"></div>
-
-          <div class="toolbar-right">
-            <span id="visible-habit-count" class="list-meta-count"></span>
-            <div class="view-switcher" role="tablist" aria-label="7 Gün Görünüm Modu">
-              <button type="button" class="view-btn active" data-view="daily" role="tab" aria-selected="true" title="Kart Görünümü">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="8" y1="6" x2="21" y2="6"></line>
-                  <line x1="8" y1="12" x2="21" y2="12"></line>
-                  <line x1="8" y1="18" x2="21" y2="18"></line>
-                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-                <span>Kartlar</span>
-              </button>
-              <button type="button" class="view-btn" data-view="weekly" role="tab" aria-selected="false" title="Tablo Görünümü">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span>Tablo</span>
-              </button>
-            </div>
-          </div>
+          <span class="list-section-label">Günlük Alışkanlıklar</span>
+          <span id="visible-habit-count" class="list-meta-count"></span>
         </div>
 
-        <div id="weekly-board-header" class="card weekly-board-header" hidden></div>
         <ul id="habit-list" class="habit-list"></ul>
 
         <!-- Motive Edici Şık Boş Durum Görünümü -->
@@ -192,10 +176,10 @@
           <h3 id="empty-title">Büyük değişimler küçük adımlarla başlar</h3>
           <p id="empty-desc">Henüz takip ettiğin bir alışkanlık yok. Yukarıdan yeni bir hedef ekle veya aşağıdaki örneklerden biriyle hemen başla:</p>
           <div id="empty-suggestions" class="empty-suggestions">
-            <button type="button" class="suggestion-chip" data-suggest-title="2 litre su iç" data-suggest-cat="Sağlık">+ 2 litre su iç</button>
-            <button type="button" class="suggestion-chip" data-suggest-title="25 dk derin odaklanma" data-suggest-cat="Odak/İş">+ 25 dk derin odaklanma</button>
-            <button type="button" class="suggestion-chip" data-suggest-title="30 dk yürüyüş yap" data-suggest-cat="Spor">+ 30 dk yürüyüş yap</button>
-            <button type="button" class="suggestion-chip" data-suggest-title="20 sayfa kitap oku" data-suggest-cat="Kişisel Gelişim">+ 20 sayfa kitap oku</button>
+            <button type="button" class="suggestion-chip" data-suggest-title="2 litre su iç" data-suggest-color="blue">+ 2 litre su iç</button>
+            <button type="button" class="suggestion-chip" data-suggest-title="25 dk derin odaklanma" data-suggest-color="yellow">+ 25 dk derin odaklanma</button>
+            <button type="button" class="suggestion-chip" data-suggest-title="30 dk yürüyüş yap" data-suggest-color="green">+ 30 dk yürüyüş yap</button>
+            <button type="button" class="suggestion-chip" data-suggest-title="20 sayfa kitap oku" data-suggest-color="red">+ 20 sayfa kitap oku</button>
           </div>
         </div>
       </section>
@@ -400,15 +384,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Kategori Bazlı Başarı Yüzdeleri -->
-      <div class="card breakdown-card">
-        <div class="breakdown-header">
-          <h3>Kategori Bazlı Başarı Oranları</h3>
-          <span class="stat-sub">Son 30 Günlük Performans</span>
-        </div>
-        <div id="category-breakdown-list" class="breakdown-list"></div>
       </div>
 
       <!-- Alışkanlık Bazlı Tekil Başarı Yüzdeleri Listesi -->
@@ -746,6 +721,6 @@
     </div>
   </nav>
 
-  <script src="script.js?v=4"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>
