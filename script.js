@@ -42,7 +42,6 @@
   const OLYMPIC_COLORS = ['blue', 'black', 'red', 'yellow', 'green'];
   const DEFAULT_OLYMPIC_COLOR = 'yellow'; // #FCB131
 
-  // Eski kayıtların renklerini 5 Olimpiyat rengine eşle
   const LEGACY_COLOR_MAP = {
     blue: 'blue',
     indigo: 'blue',
@@ -56,6 +55,18 @@
     green: 'green',
     emerald: 'green'
   };
+
+  // JS getDay() Standardı: 0=Pazar, 1=Pazartesi, ..., 6=Cumartesi
+  const ALL_DAYS_ARRAY = [0, 1, 2, 3, 4, 5, 6];
+  const ORDERED_WEEK_DAYS = [
+    { day: 1, short: 'Pzt', full: 'Pazartesi' },
+    { day: 2, short: 'Sal', full: 'Salı' },
+    { day: 3, short: 'Çar', full: 'Çarşamba' },
+    { day: 4, short: 'Per', full: 'Perşembe' },
+    { day: 5, short: 'Cum', full: 'Cuma' },
+    { day: 6, short: 'Cmt', full: 'Cumartesi' },
+    { day: 0, short: 'Paz', full: 'Pazar' }
+  ];
 
   const THEME_META_COLORS = {
     light: '#4f46e5',
@@ -101,6 +112,8 @@
   const habitForm = document.getElementById('habit-form');
   const habitTitleInput = document.getElementById('habit-title');
   const addColorPickerEl = document.getElementById('add-color-picker');
+  const addScheduleToggleEl = document.getElementById('add-schedule-toggle');
+  const addCustomDaysPickerEl = document.getElementById('add-custom-days-picker');
   const todayTasksSectionEl = document.getElementById('today-tasks-section');
   const todayTasksListEl = document.getElementById('today-tasks-list');
   const goCalendarFromTasksBtn = document.getElementById('go-calendar-from-tasks-btn');
@@ -169,6 +182,8 @@
   let dailyNotes = {};
   let dailyTasks = {};
   let selectedAddColor = DEFAULT_OLYMPIC_COLOR;
+  let addScheduleMode = 'everyday'; // 'everyday' | 'custom'
+  let addCustomDays = [1, 2, 3, 4, 5]; // Varsayılan özel seçim: Hafta içi
   let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || '7days';
   let editingHabitId = null;
   let selectedNoteDateKey = '';
@@ -181,7 +196,7 @@
   let selectedCalendarDateKey = '';
 
   // ==========================================================================
-  // TARİH VE RENK YARDIMCILARI
+  // TARİH, RENK VE PLANLANAN GÜNLER (scheduledDays) YARDIMCILARI
   // ==========================================================================
   function normalizeOlympicColor(rawColor) {
     if (typeof rawColor === 'string') {
@@ -190,6 +205,35 @@
       if (LEGACY_COLOR_MAP[clean]) return LEGACY_COLOR_MAP[clean];
     }
     return DEFAULT_OLYMPIC_COLOR;
+  }
+
+  function normalizeScheduledDays(rawDays) {
+    if (!Array.isArray(rawDays) || rawDays.length === 0) {
+      return [...ALL_DAYS_ARRAY];
+    }
+    const valid = Array.from(
+      new Set(
+        rawDays
+          .map((d) => Number(d))
+          .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+      )
+    ).sort((a, b) => a - b);
+
+    return valid.length > 0 ? valid : [...ALL_DAYS_ARRAY];
+  }
+
+  function isEveryDaySchedule(scheduledDays) {
+    const norm = normalizeScheduledDays(scheduledDays);
+    return norm.length === 7;
+  }
+
+  function formatScheduledDaysSummary(scheduledDays) {
+    const norm = normalizeScheduledDays(scheduledDays);
+    if (norm.length === 7) return 'Her gün';
+    const daySet = new Set(norm);
+    return ORDERED_WEEK_DAYS.filter((d) => daySet.has(d.day))
+      .map((d) => d.short)
+      .join(', ');
   }
 
   function formatDateKey(dateObj) {
@@ -212,6 +256,18 @@
 
   function getTodayKey() {
     return formatDateKey(new Date());
+  }
+
+  // Bir alışkanlığın belirli bir YYYY-MM-DD tarihinde planlı olup olmadığını kontrol eder
+  function isHabitScheduledOnDate(habit, dateKey) {
+    const scheduled = normalizeScheduledDays(habit.scheduledDays);
+    if (scheduled.length === 7) return true;
+    const dayOfWeek = parseDateKey(dateKey).getDay(); // 0=Paz .. 6=Cmt
+    return scheduled.includes(dayOfWeek);
+  }
+
+  function isHabitScheduledToday(habit) {
+    return isHabitScheduledOnDate(habit, getTodayKey());
   }
 
   function formatHumanDateLabel(dateKey) {
@@ -248,6 +304,7 @@
       const key = formatDateKey(d);
       days.push({
         key,
+        jsDay: d.getDay(),
         shortName: DAY_SHORT_NAMES[i],
         dayNum: d.getDate(),
         monthShort: new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(d),
@@ -305,40 +362,79 @@
   }
 
   // ==========================================================================
-  // AKILLI SERİ (STREAK) VE EN İYİ SERİ (REKOR) HESAPLAMA
+  // AKILLI SERİ (STREAK) VE EN İYİ SERİ (REKOR) HESAPLAMA (scheduledDays DUYARLI)
   // ==========================================================================
+  // Bir tarihten sonraki ilk planlı tarihi bulur
+  function getNextScheduledDateKey(fromDateKey, scheduledSet) {
+    for (let step = 1; step <= 7; step++) {
+      const nextKey = addDaysToKey(fromDateKey, step);
+      const jsDay = parseDateKey(nextKey).getDay();
+      if (scheduledSet.has(jsDay)) {
+        return nextKey;
+      }
+    }
+    return null;
+  }
+
   function calculateHabitStreaks(habit) {
     const datesArray = Array.isArray(habit.completedDates) ? habit.completedDates : [];
     const uniqueSortedDates = Array.from(new Set(datesArray)).sort();
     const dateSet = new Set(uniqueSortedDates);
 
+    const scheduledDays = normalizeScheduledDays(habit.scheduledDays);
+    const scheduledSet = new Set(scheduledDays);
+
     const todayKey = getTodayKey();
-    const yesterdayKey = addDaysToKey(todayKey, -1);
 
+    // 1. Aktif Seri: Bugünden geriye doğru yalnızca planlı günleri kontrol et.
+    // Planlı olmayan ara günlerde (dinlenme günlerinde) seri kırılmaz.
+    // Bugün planlıysa ve henüz işaretlenmediyse bugün atlanır, bir önceki planlı günden itibaren seri korunur.
     let currentStreak = 0;
-    let cursorKey = null;
+    for (let offset = 0; offset < 730; offset++) {
+      const checkKey = addDaysToKey(todayKey, -offset);
+      const jsDay = parseDateKey(checkKey).getDay();
+      const isSched = scheduledSet.has(jsDay);
 
-    if (dateSet.has(todayKey)) {
-      cursorKey = todayKey;
-    } else if (dateSet.has(yesterdayKey)) {
-      cursorKey = yesterdayKey;
+      if (offset === 0) {
+        if (dateSet.has(checkKey)) {
+          currentStreak++;
+        }
+        // Bugün tamamlanmamışsa bile seriyi kırma, dünden geriye bakmaya devam et
+        continue;
+      }
+
+      if (!isSched) {
+        // Dinlenme günü: Eğer kullanıcı dinlenme gününde ekstra tamamladıysa say, tamamlamadıysa seriyi kırmadan geç
+        if (dateSet.has(checkKey)) {
+          currentStreak++;
+        }
+        continue;
+      }
+
+      // Geçmişteki planlı bir gün: Tamamlandıysa seriyi artır, kaçırıldıysa dur
+      if (dateSet.has(checkKey)) {
+        currentStreak++;
+      } else {
+        break;
+      }
     }
 
-    while (cursorKey && dateSet.has(cursorKey)) {
-      currentStreak++;
-      cursorKey = addDaysToKey(cursorKey, -1);
-    }
+    // 2. Tüm Zamanların En Uzun Serisi (En İyi Seri / Rekor)
+    // Yalnızca planlı günlerdeki tamamlamaların ardışıklığını kontrol eder
+    const scheduledCompletedDates = uniqueSortedDates.filter((dKey) =>
+      scheduledSet.has(parseDateKey(dKey).getDay())
+    );
 
     let longestCalculated = 0;
     let runningRun = 0;
     let prevKey = null;
 
-    for (const dateKey of uniqueSortedDates) {
+    for (const dateKey of scheduledCompletedDates) {
       if (!prevKey) {
         runningRun = 1;
       } else {
-        const expectedNext = addDaysToKey(prevKey, 1);
-        if (dateKey === expectedNext) {
+        const expectedNextScheduled = getNextScheduledDateKey(prevKey, scheduledSet);
+        if (expectedNextScheduled === dateKey) {
           runningRun++;
         } else {
           runningRun = 1;
@@ -430,6 +526,7 @@
         id: habit.id || `${Date.now().toString(36)}_${index}`,
         title: typeof habit.title === 'string' && habit.title.trim() ? habit.title.trim() : 'Alışkanlık',
         color: normalizeOlympicColor(habit.color),
+        scheduledDays: normalizeScheduledDays(habit.scheduledDays),
         completedDates: completedDates.sort(),
         completed: completedDates.includes(todayKey),
         bestStreak: Number(habit.bestStreak) || 0,
@@ -460,6 +557,7 @@
       habits.forEach((h) => {
         h.completed = isCompletedOnDate(h, todayKey);
         h.color = normalizeOlympicColor(h.color);
+        h.scheduledDays = normalizeScheduledDays(h.scheduledDays);
         const { bestStreak } = calculateHabitStreaks(h);
         h.bestStreak = bestStreak;
       });
@@ -543,7 +641,53 @@
   }
 
   // ==========================================================================
-  // SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI (YALNIZCA KARTLAR & 5 RENK)
+  // SADE VE AŞAMALI GÜN SEÇİCİ YÖNETİMİ (Ekleme & Düzenleme)
+  // ==========================================================================
+  function syncAddScheduleUI() {
+    if (!addScheduleToggleEl || !addCustomDaysPickerEl) return;
+
+    addScheduleToggleEl.querySelectorAll('.schedule-mode-btn').forEach((btn) => {
+      const isMatch = btn.dataset.scheduleMode === addScheduleMode;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-checked', String(isMatch));
+    });
+
+    addCustomDaysPickerEl.hidden = addScheduleMode !== 'custom';
+
+    const selectedSet = new Set(addCustomDays);
+    addCustomDaysPickerEl.querySelectorAll('.weekday-circle-btn').forEach((btn) => {
+      const dayNum = Number(btn.dataset.day);
+      const isSelected = selectedSet.has(dayNum);
+      btn.classList.toggle('active', isSelected);
+      btn.setAttribute('aria-pressed', String(isSelected));
+    });
+  }
+
+  function getSelectedAddScheduledDays() {
+    if (addScheduleMode === 'everyday') {
+      return [...ALL_DAYS_ARRAY];
+    }
+    return normalizeScheduledDays(addCustomDays);
+  }
+
+  function renderWeekdayButtonsHTML(selectedDaysArray) {
+    const selectedSet = new Set(normalizeScheduledDays(selectedDaysArray));
+    return ORDERED_WEEK_DAYS.map((d) => {
+      const isSelected = selectedSet.has(d.day);
+      return `
+        <button
+          type="button"
+          class="weekday-circle-btn${isSelected ? ' active' : ''}"
+          data-day="${d.day}"
+          aria-pressed="${isSelected}"
+          title="${d.full}"
+        >${d.short}</button>
+      `;
+    }).join('');
+  }
+
+  // ==========================================================================
+  // SEKME 1: SADELEŞTİRİLMİŞ "7 GÜN" EKRANI (KARTLAR, 5 RENK & GÜN PLANI)
   // ==========================================================================
   function renderColorSwatchesHTML(selectedColor) {
     const activeColor = normalizeOlympicColor(selectedColor);
@@ -645,15 +789,30 @@
 
   function createHabitItemElement(habit, weekDays) {
     const todayCompleted = isCompletedToday(habit);
+    const scheduledToday = isHabitScheduledToday(habit);
+    const scheduledDays = normalizeScheduledDays(habit.scheduledDays);
+    const scheduledSet = new Set(scheduledDays);
+    const isEveryDay = scheduledDays.length === 7;
     const color = normalizeOlympicColor(habit.color);
+
     const li = document.createElement('li');
     li.dataset.id = habit.id;
     li.dataset.color = color;
 
     if (editingHabitId === habit.id) {
+      const editMode = isEveryDay ? 'everyday' : 'custom';
+      const initialCustomDays = isEveryDay ? [1, 2, 3, 4, 5] : scheduledDays;
+
       li.className = 'habit-item';
       li.innerHTML = `
-        <form class="habit-edit-form" data-edit-id="${habit.id}" data-selected-color="${color}" autocomplete="off">
+        <form
+          class="habit-edit-form"
+          data-edit-id="${habit.id}"
+          data-selected-color="${color}"
+          data-schedule-mode="${editMode}"
+          data-custom-days="${initialCustomDays.join(',')}"
+          autocomplete="off"
+        >
           <input
             type="text"
             class="habit-edit-title"
@@ -669,6 +828,23 @@
             <button type="submit" class="save-edit-btn">Kaydet</button>
             <button type="button" class="cancel-edit-btn">İptal</button>
           </div>
+
+          <div class="edit-schedule-row">
+            <div class="schedule-mode-bar">
+              <span class="schedule-label">Sıklık:</span>
+              <div class="schedule-toggle edit-schedule-toggle" role="radiogroup" aria-label="Alışkanlık Sıklığı">
+                <button type="button" class="schedule-mode-btn${editMode === 'everyday' ? ' active' : ''}" data-schedule-mode="everyday" role="radio" aria-checked="${editMode === 'everyday'}">
+                  Her Gün
+                </button>
+                <button type="button" class="schedule-mode-btn${editMode === 'custom' ? ' active' : ''}" data-schedule-mode="custom" role="radio" aria-checked="${editMode === 'custom'}">
+                  Belirli Günler
+                </button>
+              </div>
+            </div>
+            <div class="custom-days-picker edit-custom-days-picker" role="group" aria-label="Haftanın Günlerini Seçin" ${editMode === 'everyday' ? 'hidden' : ''}>
+              ${renderWeekdayButtonsHTML(initialCustomDays)}
+            </div>
+          </div>
         </form>
       `;
       return li;
@@ -682,6 +858,14 @@
         <span class="streak-best">(En iyi: ${bestStreak})</span>
       </span>
     `;
+
+    const scheduleBadge = !isEveryDay
+      ? `<span class="schedule-days-badge" title="Planlanan Günler">${escapeHTML(formatScheduledDaysSummary(scheduledDays))}</span>`
+      : '';
+
+    const notTodayBadge = !scheduledToday
+      ? `<span class="not-today-badge">Bugün yok</span>`
+      : '';
 
     const actionButtonsHTML = `
       <div class="habit-actions">
@@ -702,24 +886,39 @@
       </div>
     `;
 
-    li.className = `habit-item${todayCompleted ? ' completed' : ''}`;
+    li.className = [
+      'habit-item',
+      todayCompleted && scheduledToday ? 'completed' : '',
+      !scheduledToday ? 'not-today' : ''
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     const miniWeekPillsHTML = weekDays
       .map((d) => {
+        const isDayScheduled = scheduledSet.has(d.jsDay);
         const done = isCompletedOnDate(habit, d.key);
+        const isDisabled = d.isFuture || !isDayScheduled;
+
         const classes = [
           'day-pill',
           'day-toggle-btn',
-          done ? 'is-done' : '',
+          done && isDayScheduled ? 'is-done' : '',
           d.isToday ? 'is-today' : '',
-          d.isFuture ? 'is-future' : ''
+          d.isFuture ? 'is-future' : '',
+          !isDayScheduled ? 'is-unscheduled' : ''
         ]
           .filter(Boolean)
           .join(' ');
 
-        const tooltip = d.isFuture
-          ? `${d.dayNum} ${d.monthShort} ${d.shortName} (Gelecek gün)`
-          : `${d.dayNum} ${d.monthShort} ${d.shortName} — ${done ? 'Tamamlandı (Kaldırmak için tıkla)' : 'Tamamlandı olarak işaretle'}`;
+        let tooltip = '';
+        if (!isDayScheduled) {
+          tooltip = `${d.dayNum} ${d.monthShort} ${d.shortName} (Planlı değil)`;
+        } else if (d.isFuture) {
+          tooltip = `${d.dayNum} ${d.monthShort} ${d.shortName} (Gelecek gün)`;
+        } else {
+          tooltip = `${d.dayNum} ${d.monthShort} ${d.shortName} — ${done ? 'Tamamlandı (Kaldırmak için tıkla)' : 'Tamamlandı olarak işaretle'}`;
+        }
 
         return `
           <button
@@ -729,11 +928,11 @@
             data-date-key="${d.key}"
             title="${tooltip}"
             aria-label="${tooltip}"
-            aria-pressed="${done}"
-            ${d.isFuture ? 'disabled' : ''}
+            aria-pressed="${done && isDayScheduled}"
+            ${isDisabled ? 'disabled' : ''}
           >
             <span class="day-pill-name">${d.shortName}</span>
-            <span class="day-pill-num">${done ? '✓' : d.dayNum}</span>
+            <span class="day-pill-num">${!isDayScheduled ? '·' : done ? '✓' : d.dayNum}</span>
           </button>
         `;
       })
@@ -745,7 +944,8 @@
           <input
             type="checkbox"
             class="habit-checkbox"
-            ${todayCompleted ? 'checked' : ''}
+            ${todayCompleted && scheduledToday ? 'checked' : ''}
+            ${!scheduledToday ? 'disabled' : ''}
             aria-label="${escapeHTML(habit.title)} bugün tamamlandı olarak işaretle"
           />
           <span class="custom-checkbox" aria-hidden="true">
@@ -759,7 +959,9 @@
               <span class="habit-title">${escapeHTML(habit.title)}</span>
             </div>
             <div class="habit-meta">
+              ${notTodayBadge}
               ${streakBadge}
+              ${scheduleBadge}
             </div>
           </div>
         </label>
@@ -780,8 +982,13 @@
     renderTodaySpecialTasksOn7Days();
     const weekDays = getCurrentWeekDays();
 
-    const pendingHabits = habits.filter((h) => !isCompletedToday(h));
-    const completedHabits = habits.filter((h) => isCompletedToday(h));
+    // 1. Bugün planlı ve henüz tamamlanmamış alışkanlıklar
+    const scheduledTodayHabits = habits.filter((h) => isHabitScheduledToday(h));
+    const pendingTodayHabits = scheduledTodayHabits.filter((h) => !isCompletedToday(h));
+    // 2. Bugün planlı ve tamamlanmış alışkanlıklar
+    const completedTodayHabits = scheduledTodayHabits.filter((h) => isCompletedToday(h));
+    // 3. Bugün planlı OLMAYAN alışkanlıklar (listenin en altında hafif soluk)
+    const notScheduledTodayHabits = habits.filter((h) => !isHabitScheduledToday(h));
 
     habitListEl.innerHTML = '';
 
@@ -794,26 +1001,41 @@
       emptySuggestionsEl.hidden = false;
     } else {
       emptyStateEl.hidden = true;
-      visibleHabitCountEl.textContent =
-        pendingHabits.length > 0
-          ? `${pendingHabits.length} bekleyen`
-          : 'Tüm hedefler tamamlandı';
+      if (scheduledTodayHabits.length === 0) {
+        visibleHabitCountEl.textContent = 'Bugün planlı hedef yok';
+      } else if (pendingTodayHabits.length > 0) {
+        visibleHabitCountEl.textContent = `${pendingTodayHabits.length} bekleyen`;
+      } else {
+        visibleHabitCountEl.textContent = 'Tüm hedefler tamamlandı';
+      }
 
-      pendingHabits.forEach((habit) => {
+      pendingTodayHabits.forEach((habit) => {
         habitListEl.appendChild(createHabitItemElement(habit, weekDays));
       });
 
-      if (completedHabits.length > 0 && pendingHabits.length > 0) {
+      if (completedTodayHabits.length > 0 && pendingTodayHabits.length > 0) {
         const divider = document.createElement('li');
         divider.className = 'habit-group-divider';
         divider.setAttribute('aria-hidden', 'true');
-        divider.textContent = `Bugün Tamamlananlar (${completedHabits.length})`;
+        divider.textContent = `Bugün Tamamlananlar (${completedTodayHabits.length})`;
         habitListEl.appendChild(divider);
       }
 
-      completedHabits.forEach((habit) => {
+      completedTodayHabits.forEach((habit) => {
         habitListEl.appendChild(createHabitItemElement(habit, weekDays));
       });
+
+      if (notScheduledTodayHabits.length > 0) {
+        const divider = document.createElement('li');
+        divider.className = 'habit-group-divider';
+        divider.setAttribute('aria-hidden', 'true');
+        divider.textContent = `Bugün Planlı Olmayanlar (${notScheduledTodayHabits.length})`;
+        habitListEl.appendChild(divider);
+
+        notScheduledTodayHabits.forEach((habit) => {
+          habitListEl.appendChild(createHabitItemElement(habit, weekDays));
+        });
+      }
     }
 
     if (editingHabitId) {
@@ -826,7 +1048,7 @@
   }
 
   // ==========================================================================
-  // SEKME 2: YILLIK "TAKVİM" SEKMESİ (AY AY İLERLEMELİ & GÖREV EKLEMELİ)
+  // SEKME 2: YILLIK "TAKVİM" SEKMESİ (scheduledDays DUYARLI)
   // ==========================================================================
   function renderCalendarMonth() {
     if (!selectedCalendarDateKey) {
@@ -859,10 +1081,13 @@
       const isToday = dateKey === todayKey;
       const isSelected = dateKey === selectedCalendarDateKey;
 
-      const completedHabitsCount = habits.filter((h) => isCompletedOnDate(h, dateKey)).length;
+      // Yalnızca o tarihin haftanın gününe planlanmış alışkanlıkları baz al
+      const scheduledHabitsForCell = habits.filter((h) => isHabitScheduledOnDate(h, dateKey));
+      const completedHabitsCount = scheduledHabitsForCell.filter((h) => isCompletedOnDate(h, dateKey)).length;
       const tasksOnDay = getTasksForDate(dateKey);
       const hasNoteOnDay = Boolean(dailyNotes[dateKey] && dailyNotes[dateKey].trim());
-      const allHabitsDone = habits.length > 0 && completedHabitsCount === habits.length;
+      const allHabitsDone =
+        scheduledHabitsForCell.length > 0 && completedHabitsCount === scheduledHabitsForCell.length;
 
       const cellBtn = document.createElement('button');
       cellBtn.type = 'button';
@@ -881,7 +1106,7 @@
 
       let indicatorsHTML = '';
       if (completedHabitsCount > 0) {
-        indicatorsHTML += `<span class="cal-ind-dot dot-habit-done" title="${completedHabitsCount} alışkanlık tamamlandı"></span>`;
+        indicatorsHTML += `<span class="cal-ind-dot dot-habit-done" title="${completedHabitsCount}/${scheduledHabitsForCell.length} planlı alışkanlık tamamlandı"></span>`;
       }
       if (tasksOnDay.length > 0) {
         indicatorsHTML += `<span class="cal-ind-dot dot-task-planned" title="${tasksOnDay.length} özel görev"></span>`;
@@ -907,10 +1132,13 @@
     const todayKey = getTodayKey();
     const isFutureDay = selectedCalendarDateKey > todayKey;
     const tasksOnDay = getTasksForDate(selectedCalendarDateKey);
-    const completedHabitsOnDay = habits.filter((h) => isCompletedOnDate(h, selectedCalendarDateKey)).length;
+    const scheduledHabitsOnDay = habits.filter((h) => isHabitScheduledOnDate(h, selectedCalendarDateKey));
+    const completedHabitsOnDay = scheduledHabitsOnDay.filter((h) =>
+      isCompletedOnDate(h, selectedCalendarDateKey)
+    ).length;
 
     dayDetailTitleEl.textContent = formatHumanDateLabel(selectedCalendarDateKey);
-    dayDetailSummaryBadgeEl.textContent = `${tasksOnDay.length} görev • ${completedHabitsOnDay}/${habits.length} alışkanlık`;
+    dayDetailSummaryBadgeEl.textContent = `${tasksOnDay.length} görev • ${completedHabitsOnDay}/${scheduledHabitsOnDay.length} alışkanlık`;
     dayDetailFutureNoticeEl.hidden = !isFutureDay;
 
     // A) Seçili Güne Özel Görevler Listesi
@@ -958,12 +1186,14 @@
       });
     }
 
-    // B) O Güne Ait Günlük Alışkanlıklar Listesi
+    // B) O Güne Planlı Günlük Alışkanlıklar Listesi
     dayDetailHabitsListEl.innerHTML = '';
     if (habits.length === 0) {
       dayDetailHabitsListEl.innerHTML = `<li class="day-detail-empty">Henüz tanımlı bir alışkanlık yok. "7 Gün" sekmesinden alışkanlık ekleyebilirsiniz.</li>`;
+    } else if (scheduledHabitsOnDay.length === 0) {
+      dayDetailHabitsListEl.innerHTML = `<li class="day-detail-empty">Bu gün için planlanmış bir alışkanlık bulunmuyor (dinlenme günü).</li>`;
     } else {
-      habits.forEach((habit) => {
+      scheduledHabitsOnDay.forEach((habit) => {
         const done = isCompletedOnDate(habit, selectedCalendarDateKey);
         const color = normalizeOlympicColor(habit.color);
 
@@ -998,27 +1228,33 @@
   }
 
   // ==========================================================================
-  // SEKME 3: AYRI "İLERLEME" SEKMESİ (GENEL VE ALIŞKANLIK BAZLI İLERLEME)
+  // SEKME 3: AYRI "İLERLEME" SEKMESİ (scheduledDays DUYARLI)
   // ==========================================================================
   function renderProgressTab() {
     const todayKey = getTodayKey();
-    const total = habits.length;
-    const completedTodayCount = habits.filter((h) => isCompletedOnDate(h, todayKey)).length;
-    const percent = total === 0 ? 0 : Math.round((completedTodayCount / total) * 100);
+    // Günlük yüzde hesabı yalnızca bugünün haftanın gününe planlanmış alışkanlıklar üzerinden yapılır
+    const scheduledTodayList = habits.filter((h) => isHabitScheduledOnDate(h, todayKey));
+    const totalScheduledToday = scheduledTodayList.length;
+    const completedTodayCount = scheduledTodayList.filter((h) => isCompletedOnDate(h, todayKey)).length;
+    const percent =
+      totalScheduledToday === 0 ? 0 : Math.round((completedTodayCount / totalScheduledToday) * 100);
 
     const offset = RING_CIRCUMFERENCE - (percent / 100) * RING_CIRCUMFERENCE;
     if (progressRingCircleEl) {
       progressRingCircleEl.style.strokeDashoffset = String(offset);
-      progressRingCircleEl.classList.toggle('all-done', total > 0 && completedTodayCount === total);
+      progressRingCircleEl.classList.toggle(
+        'all-done',
+        totalScheduledToday > 0 && completedTodayCount === totalScheduledToday
+      );
     }
 
     progressPercentEl.textContent = `${percent}%`;
-    progressCountEl.textContent = `Bugün ${completedTodayCount} / ${total} alışkanlık tamamlandı`;
-    progressRatioBadgeEl.textContent = `${completedTodayCount} / ${total} tamamlandı`;
+    progressCountEl.textContent = `Bugün planlı ${completedTodayCount} / ${totalScheduledToday} alışkanlık tamamlandı`;
+    progressRatioBadgeEl.textContent = `${completedTodayCount} / ${totalScheduledToday} tamamlandı`;
     progressFillEl.style.width = `${percent}%`;
     progressBarContainer.setAttribute('aria-valuenow', String(percent));
 
-    const isAllDone = total > 0 && completedTodayCount === total;
+    const isAllDone = totalScheduledToday > 0 && completedTodayCount === totalScheduledToday;
     progressPercentEl.classList.toggle('all-done', isAllDone);
     progressFillEl.classList.toggle('all-done', isAllDone);
 
@@ -1060,8 +1296,10 @@
     monthlyTotalValueEl.textContent = `${monthlyCompletions} kez`;
     monthlyNameSubEl.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
-    if (total === 0) {
+    if (habits.length === 0) {
       progressMessageEl.textContent = 'İstatistikleri görmek için "7 Gün" sekmesinden ilk alışkanlığını ekle.';
+    } else if (totalScheduledToday === 0) {
+      progressMessageEl.textContent = 'Bugün için planlanmış bir alışkanlık yok. İyi dinlenmeler!';
     } else if (percent === 0) {
       progressMessageEl.textContent =
         topActiveStreak > 0
@@ -1075,23 +1313,22 @@
       progressMessageEl.textContent = 'Tüm hedefler tamamlandı! Bugünkü serini başarıyla korudun.';
     }
 
-    const last30KeysSet = new Set(getLast30DaysKeys());
+    const last30Keys = getLast30DaysKeys();
 
-    // Alışkanlık Bazlı Tekil Başarı Yüzdeleri Listesi
+    // Alışkanlık Bazlı Tekil Başarı Yüzdeleri Listesi (Son 30 gündeki planlı gün sayısına göre)
     habitBreakdownListEl.innerHTML = '';
     if (habits.length === 0) {
       habitBreakdownListEl.innerHTML = `<p class="day-detail-empty">Henüz alışkanlık eklenmedi.</p>`;
     } else {
       habits.forEach((habit) => {
-        let checks30 = 0;
-        if (Array.isArray(habit.completedDates)) {
-          habit.completedDates.forEach((dKey) => {
-            if (last30KeysSet.has(dKey)) checks30++;
-          });
-        }
-        const rate30 = Math.round((checks30 / 30) * 100);
+        const scheduledKeysInLast30 = last30Keys.filter((dKey) => isHabitScheduledOnDate(habit, dKey));
+        const scheduledTotal30 = scheduledKeysInLast30.length || 1;
+        const checks30 = scheduledKeysInLast30.filter((dKey) => isCompletedOnDate(habit, dKey)).length;
+
+        const rate30 = Math.round((checks30 / scheduledTotal30) * 100);
         const { currentStreak, bestStreak } = calculateHabitStreaks(habit);
         const color = normalizeOlympicColor(habit.color);
+        const scheduleLabel = formatScheduledDaysSummary(habit.scheduledDays);
 
         const div = document.createElement('div');
         div.className = 'breakdown-item';
@@ -1100,11 +1337,12 @@
             <div class="breakdown-item-title">
               <span class="habit-color-dot" data-color="${color}" aria-hidden="true"></span>
               <span>${escapeHTML(habit.title)}</span>
+              <span class="schedule-days-badge">${escapeHTML(scheduleLabel)}</span>
             </div>
             <div class="breakdown-item-meta">
               <span>🔥 ${currentStreak}g (En iyi: ${bestStreak}g)</span>
               <span>•</span>
-              <span>${rate30}% (${checks30}/30g)</span>
+              <span>${rate30}% (${checks30}/${scheduledKeysInLast30.length}g)</span>
             </div>
           </div>
           <div class="progress-track">
@@ -1377,7 +1615,7 @@
   // ==========================================================================
   // ALIŞKANLIK EKLEME, İŞARETLEME, DÜZENLEME VE SİLME
   // ==========================================================================
-  function addHabit(title, colorKey) {
+  function addHabit(title, colorKey, scheduledDaysInput = ALL_DAYS_ARRAY) {
     const cleanTitle = title.trim();
     if (!cleanTitle) return;
 
@@ -1385,6 +1623,7 @@
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       title: cleanTitle,
       color: normalizeOlympicColor(colorKey),
+      scheduledDays: normalizeScheduledDays(scheduledDaysInput),
       completedDates: [],
       completed: false,
       bestStreak: 0,
@@ -1402,6 +1641,9 @@
 
     const habit = habits.find((h) => h.id === id);
     if (!habit) return;
+
+    // Planlı olmayan bir gün işaretlenmek istenirse engelle
+    if (!isHabitScheduledOnDate(habit, dateKey)) return;
 
     if (!Array.isArray(habit.completedDates)) {
       habit.completedDates = [];
@@ -1437,7 +1679,7 @@
     }
   }
 
-  function saveEditedHabit(id, newTitle, newColor) {
+  function saveEditedHabit(id, newTitle, newColor, newScheduledDays) {
     const cleanTitle = newTitle.trim();
     if (!cleanTitle) return;
 
@@ -1446,6 +1688,7 @@
 
     habit.title = cleanTitle;
     habit.color = normalizeOlympicColor(newColor);
+    habit.scheduledDays = normalizeScheduledDays(newScheduledDays);
 
     editingHabitId = null;
     saveHabits();
@@ -1544,7 +1787,7 @@
       const todayKey = getTodayKey();
       const backupPayload = {
         app: 'Olimpya',
-        version: 7,
+        version: 8,
         exportedAt: new Date().toISOString(),
         theme: localStorage.getItem(THEME_KEY) || 'light',
         habits,
@@ -1718,7 +1961,7 @@
 
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('./sw.js?v=5', { updateViaCache: 'none' })
+        .register('./sw.js?v=6', { updateViaCache: 'none' })
         .then((reg) => {
           swRegistration = reg;
           reg.update().catch(() => {});
@@ -1853,7 +2096,7 @@
     forceUpdateAppBtn.addEventListener('click', forceRefreshAppCacheAndReload);
   }
 
-  // Sekme 1 ("7 Gün") Dinleyicileri — 5 Olimpiyat Rengi Seçici
+  // Sekme 1 ("7 Gün") Dinleyicileri — 5 Olimpiyat Rengi Seçici & Aşamalı Gün Seçici
   if (addColorPickerEl) {
     addColorPickerEl.addEventListener('click', (e) => {
       const swatch = e.target.closest('.color-swatch-btn');
@@ -1862,10 +2105,52 @@
     });
   }
 
+  if (addScheduleToggleEl) {
+    addScheduleToggleEl.addEventListener('click', (e) => {
+      const modeBtn = e.target.closest('.schedule-mode-btn');
+      if (!modeBtn || !modeBtn.dataset.scheduleMode) return;
+      addScheduleMode = modeBtn.dataset.scheduleMode === 'custom' ? 'custom' : 'everyday';
+      if (addScheduleMode === 'custom' && (!Array.isArray(addCustomDays) || addCustomDays.length === 0 || addCustomDays.length === 7)) {
+        addCustomDays = [1, 2, 3, 4, 5];
+      }
+      syncAddScheduleUI();
+    });
+  }
+
+  if (addCustomDaysPickerEl) {
+    addCustomDaysPickerEl.addEventListener('click', (e) => {
+      const dayBtn = e.target.closest('.weekday-circle-btn');
+      if (!dayBtn || dayBtn.dataset.day === undefined) return;
+      const dayNum = Number(dayBtn.dataset.day);
+      const currentSet = new Set(addCustomDays);
+
+      if (currentSet.has(dayNum)) {
+        // En az 1 gün seçili kalmalı
+        if (currentSet.size <= 1) return;
+        currentSet.delete(dayNum);
+      } else {
+        currentSet.add(dayNum);
+      }
+
+      // 7 günün tamamı seçilirse otomatik "Her Gün" moduna dön
+      if (currentSet.size === 7) {
+        addScheduleMode = 'everyday';
+        addCustomDays = [1, 2, 3, 4, 5];
+      } else {
+        addCustomDays = Array.from(currentSet).sort((a, b) => a - b);
+      }
+
+      syncAddScheduleUI();
+    });
+  }
+
   habitForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    addHabit(habitTitleInput.value, selectedAddColor);
+    const scheduledDays = getSelectedAddScheduledDays();
+    addHabit(habitTitleInput.value, selectedAddColor, scheduledDays);
     habitTitleInput.value = '';
+    addScheduleMode = 'everyday';
+    syncAddScheduleUI();
     habitTitleInput.focus();
   });
 
@@ -1897,18 +2182,90 @@
   });
 
   habitListEl.addEventListener('click', (e) => {
-    // Düzenleme formundaki 5 renk seçici buton tıklaması
+    // 1. Düzenleme formundaki 5 renk seçici buton tıklaması
     const editSwatch = e.target.closest('.edit-color-picker .color-swatch-btn');
     if (editSwatch) {
       const formEl = editSwatch.closest('.habit-edit-form');
       if (formEl) {
         const chosenColor = normalizeOlympicColor(editSwatch.dataset.color);
         formEl.dataset.selectedColor = chosenColor;
-        formEl.querySelectorAll('.color-swatch-btn').forEach((btn) => {
+        formEl.querySelectorAll('.edit-color-picker .color-swatch-btn').forEach((btn) => {
           const isMatch = btn.dataset.color === chosenColor;
           btn.classList.toggle('active', isMatch);
           btn.setAttribute('aria-checked', String(isMatch));
         });
+      }
+      return;
+    }
+
+    // 2. Düzenleme formundaki "Her Gün | Belirli Günler" mod geçişi
+    const editModeBtn = e.target.closest('.edit-schedule-toggle .schedule-mode-btn');
+    if (editModeBtn) {
+      const formEl = editModeBtn.closest('.habit-edit-form');
+      if (formEl) {
+        const newMode = editModeBtn.dataset.scheduleMode === 'custom' ? 'custom' : 'everyday';
+        formEl.dataset.scheduleMode = newMode;
+        formEl.querySelectorAll('.edit-schedule-toggle .schedule-mode-btn').forEach((btn) => {
+          const isMatch = btn.dataset.scheduleMode === newMode;
+          btn.classList.toggle('active', isMatch);
+          btn.setAttribute('aria-checked', String(isMatch));
+        });
+        const customPicker = formEl.querySelector('.edit-custom-days-picker');
+        if (customPicker) {
+          customPicker.hidden = newMode !== 'custom';
+        }
+      }
+      return;
+    }
+
+    // 3. Düzenleme formundaki 7 yuvarlak gün butonu tıklaması
+    const editDayBtn = e.target.closest('.edit-custom-days-picker .weekday-circle-btn');
+    if (editDayBtn) {
+      const formEl = editDayBtn.closest('.habit-edit-form');
+      if (formEl) {
+        const rawDaysStr = formEl.dataset.customDays || '1,2,3,4,5';
+        const currentSet = new Set(
+          rawDaysStr
+            .split(',')
+            .map((v) => Number(v))
+            .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
+        );
+        const clickedDay = Number(editDayBtn.dataset.day);
+
+        if (currentSet.has(clickedDay)) {
+          if (currentSet.size <= 1) return; // En az 1 gün seçili kalmalı
+          currentSet.delete(clickedDay);
+        } else {
+          currentSet.add(clickedDay);
+        }
+
+        const customPicker = formEl.querySelector('.edit-custom-days-picker');
+
+        // 7 günün tamamı seçilirse otomatik "Her Gün" moduna dön
+        if (currentSet.size === 7) {
+          formEl.dataset.scheduleMode = 'everyday';
+          formEl.dataset.customDays = '1,2,3,4,5';
+          formEl.querySelectorAll('.edit-schedule-toggle .schedule-mode-btn').forEach((btn) => {
+            const isEveryday = btn.dataset.scheduleMode === 'everyday';
+            btn.classList.toggle('active', isEveryday);
+            btn.setAttribute('aria-checked', String(isEveryday));
+          });
+          if (customPicker) {
+            customPicker.hidden = true;
+            customPicker.innerHTML = renderWeekdayButtonsHTML([1, 2, 3, 4, 5]);
+          }
+        } else {
+          const updatedArray = Array.from(currentSet).sort((a, b) => a - b);
+          formEl.dataset.customDays = updatedArray.join(',');
+          if (customPicker) {
+            customPicker.querySelectorAll('.weekday-circle-btn').forEach((btn) => {
+              const dNum = Number(btn.dataset.day);
+              const isSel = currentSet.has(dNum);
+              btn.classList.toggle('active', isSel);
+              btn.setAttribute('aria-pressed', String(isSel));
+            });
+          }
+        }
       }
       return;
     }
@@ -1950,10 +2307,21 @@
   habitListEl.addEventListener('submit', (e) => {
     if (e.target.classList.contains('habit-edit-form')) {
       e.preventDefault();
-      const id = e.target.dataset.editId;
-      const titleInput = e.target.querySelector('.habit-edit-title');
-      const chosenColor = e.target.dataset.selectedColor || DEFAULT_OLYMPIC_COLOR;
-      saveEditedHabit(id, titleInput.value, chosenColor);
+      const formEl = e.target;
+      const id = formEl.dataset.editId;
+      const titleInput = formEl.querySelector('.habit-edit-title');
+      const chosenColor = formEl.dataset.selectedColor || DEFAULT_OLYMPIC_COLOR;
+      const mode = formEl.dataset.scheduleMode || 'everyday';
+      let chosenScheduledDays = [...ALL_DAYS_ARRAY];
+
+      if (mode === 'custom') {
+        const rawDaysStr = formEl.dataset.customDays || '1,2,3,4,5';
+        chosenScheduledDays = normalizeScheduledDays(
+          rawDaysStr.split(',').map((v) => Number(v))
+        );
+      }
+
+      saveEditedHabit(id, titleInput.value, chosenColor, chosenScheduledDays);
     }
   });
 
@@ -1967,7 +2335,11 @@
   emptySuggestionsEl.addEventListener('click', (e) => {
     const chip = e.target.closest('.suggestion-chip');
     if (!chip) return;
-    addHabit(chip.dataset.suggestTitle, chip.dataset.suggestColor || DEFAULT_OLYMPIC_COLOR);
+    addHabit(
+      chip.dataset.suggestTitle,
+      chip.dataset.suggestColor || DEFAULT_OLYMPIC_COLOR,
+      ALL_DAYS_ARRAY
+    );
   });
 
   // Sekme 2 ("Takvim") Dinleyicileri
@@ -2112,6 +2484,7 @@
   loadDailyTasks();
   loadNotes();
   selectedCalendarDateKey = getTodayKey();
+  syncAddScheduleUI();
   renderHabits();
   renderCalendarMonth();
   renderCalendarDayDetail();

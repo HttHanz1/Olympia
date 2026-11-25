@@ -11,11 +11,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="manifest" href="manifest.json?v=5" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=5" />
-  <link rel="apple-touch-icon" href="icon.svg?v=5" />
+  <link rel="manifest" href="manifest.json?v=6" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=6" />
+  <link rel="apple-touch-icon" href="icon.svg?v=6" />
   <title>Olimpya — Kişisel Alışkanlık & Planlama</title>
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
   <div class="app-container">
@@ -133,6 +133,32 @@
               </svg>
               <span>Ekle</span>
             </button>
+          </div>
+
+          <!-- Sade ve Aşamalı Gün Planlayıcı: "Her Gün" (Varsayılan) | "Belirli Günler" -->
+          <div class="schedule-row">
+            <div class="schedule-mode-bar">
+              <span class="schedule-label">Sıklık:</span>
+              <div class="schedule-toggle" id="add-schedule-toggle" role="radiogroup" aria-label="Alışkanlık Sıklığı">
+                <button type="button" class="schedule-mode-btn active" data-schedule-mode="everyday" role="radio" aria-checked="true">
+                  Her Gün
+                </button>
+                <button type="button" class="schedule-mode-btn" data-schedule-mode="custom" role="radio" aria-checked="false">
+                  Belirli Günler
+                </button>
+              </div>
+            </div>
+
+            <!-- Yalnızca "Belirli Günler" seçildiğinde açılan 7 yuvarlak gün butonu (Pzt=1 ... Paz=0) -->
+            <div class="custom-days-picker" id="add-custom-days-picker" role="group" aria-label="Haftanın Günlerini Seçin" hidden>
+              <button type="button" class="weekday-circle-btn active" data-day="1" aria-pressed="true" title="Pazartesi">Pzt</button>
+              <button type="button" class="weekday-circle-btn active" data-day="2" aria-pressed="true" title="Salı">Sal</button>
+              <button type="button" class="weekday-circle-btn active" data-day="3" aria-pressed="true" title="Çarşamba">Çar</button>
+              <button type="button" class="weekday-circle-btn active" data-day="4" aria-pressed="true" title="Perşembe">Per</button>
+              <button type="button" class="weekday-circle-btn active" data-day="5" aria-pressed="true" title="Cuma">Cum</button>
+              <button type="button" class="weekday-circle-btn" data-day="6" aria-pressed="false" title="Cumartesi">Cmt</button>
+              <button type="button" class="weekday-circle-btn" data-day="0" aria-pressed="false" title="Pazar">Paz</button>
+            </div>
           </div>
         </form>
       </section>
@@ -721,6 +747,6 @@
     </div>
   </nav>
 
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

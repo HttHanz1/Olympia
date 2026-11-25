@@ -651,6 +651,173 @@ select {
   color: var(--text-secondary);
 }
 
+/* ==========================================================================
+   SADE VE AŞAMALI GÜN SEÇİCİ ("Her Gün" | "Belirli Günler" + 7 Yuvarlak Gün)
+   ========================================================================== */
+.schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  padding-top: 0.72rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.schedule-mode-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.schedule-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.schedule-toggle {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 0.18rem;
+  border-radius: 10px;
+  gap: 0.18rem;
+}
+
+.schedule-mode-btn {
+  padding: 0.3rem 0.68rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.schedule-mode-btn:hover {
+  color: var(--text-main);
+}
+
+.schedule-mode-btn.active {
+  background-color: var(--primary);
+  color: var(--btn-primary-text);
+  font-weight: 700;
+}
+
+.custom-days-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  flex-wrap: wrap;
+  animation: fadeTabIn 0.18s ease;
+}
+
+.custom-days-picker[hidden] {
+  display: none !important;
+}
+
+.weekday-circle-btn {
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.71rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.weekday-circle-btn:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.weekday-circle-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--btn-primary-text);
+  transform: scale(1.05);
+}
+
+/* Bugün Planlı Olmayan Alışkanlık Kartı ("Bugün yok" & Soluk Görünüm) */
+.habit-item.not-today {
+  opacity: 0.55;
+  background-color: var(--bg-card-completed);
+}
+
+.habit-item.not-today:hover {
+  opacity: 0.82;
+}
+
+.habit-item.not-today .habit-label {
+  cursor: default;
+}
+
+.habit-checkbox:disabled + .custom-checkbox {
+  opacity: 0.45;
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
+.not-today-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.12rem 0.52rem;
+  border-radius: 999px;
+  background-color: var(--bg-hover);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-color);
+}
+
+.schedule-days-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* 7 Günlük Mini Şeritte Planlı Olmayan Günler (Noktalı / Soluk / Pasif) */
+.day-pill.is-unscheduled {
+  opacity: 0.26 !important;
+  border-style: dotted !important;
+  background-color: transparent !important;
+  cursor: not-allowed !important;
+}
+
+/* Düzenleme Formu İçindeki Gün Seçici Satırı */
+.edit-schedule-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--border-color);
+}
+
 .cat-dot {
   width: 7px;
   height: 7px;
